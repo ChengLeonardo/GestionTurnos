@@ -1,11 +1,17 @@
 import { useContext, useState } from "react";
 import { TurnosContext } from "../context/TurnosContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Turnos() {
 const { turnos, setTurnos, pacientes, profesionales } = useContext(TurnosContext);
   // Estado del formulario
+  const { usuario } = useAuth();
   const [form, setForm] = useState({ pacienteId: "", profesionalId: "", fecha: "", hora: "" });
   const [editingId, setEditingId] = useState(null);
+  
+  const turnosfiltrado = (usuario.rol === "admin" || usuario.rol === "asistente")
+    ? turnos
+    : turnos.filter(t => t.paciente === usuario.id); // o id del paciente
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -14,7 +20,7 @@ const { turnos, setTurnos, pacientes, profesionales } = useContext(TurnosContext
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingId) {
-      setTurnos(turnos.map(t => t.id === editingId ? { id: editingId, ...form } : t));
+      setTurnos(turnosfiltrado.map(t => t.id === editingId ? { id: editingId, ...form } : t));
       setEditingId(null);
     } else {
         const newTurno = {
@@ -24,13 +30,13 @@ const { turnos, setTurnos, pacientes, profesionales } = useContext(TurnosContext
             fecha: form.fecha,
             hora: form.hora
         };
-      setTurnos([...turnos, newTurno]);
+      setTurnos([...turnosfiltrado, newTurno]);
     }
     setForm({ pacienteId: "", profesionalId: "", fecha: "", hora: "" });
   };
 
   const handleCancelar = (id) => {
-    setTurnos(turnos.filter(t => t.id !== id));
+    setTurnos(turnosfiltrado.filter(t => t.id !== id));
   };
 
   const handleEditar = (t) => {
@@ -48,10 +54,14 @@ const { turnos, setTurnos, pacientes, profesionales } = useContext(TurnosContext
 
       {/* Formulario */}
       <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-        <select name="pacienteId" value={form.pacienteId} onChange={handleChange} required style={inputStyle}>
-          <option type="number" value="">Seleccionar Paciente</option>
-          {pacientes.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-        </select>
+        { (usuario?.rol === "admin" || usuario?.rol === "asistente") ? (
+          <select name="pacienteId" value={form.pacienteId} onChange={handleChange} required style={inputStyle}>
+            <option type="number" value="">Seleccionar Paciente</option>
+            {pacientes.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+          </select>  
+        ) :
+        <input value={form.pacienteId} hidden></input>
+        }
 
         <select name="profesionalId" value={form.profesionalId} onChange={handleChange} required style={inputStyle}>
           <option value="">Seleccionar Profesional</option>
@@ -60,11 +70,11 @@ const { turnos, setTurnos, pacientes, profesionales } = useContext(TurnosContext
 
         <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required style={inputStyle}/>
         <input type="time" name="hora" value={form.hora} onChange={handleChange} required style={inputStyle}/>
-        <button type="submit" style={btnStyle}>{editingId ? "Actualizar Turno" : "Crear Turno"}</button>
+        <button type="submit" style={btnStyle}>{editingId ? "Actualizar Turno" : (usuario?.rol === "usuario") ? "Sacar Turno" : "Crear Turno"}</button>
         {editingId && <button type="button" style={{...btnStyle, backgroundColor:"#FF4C4C"}} onClick={() => {setEditingId(null); setForm({ pacienteId:"", profesionalId:"", fecha:"", hora:"" })}}>Cancelar Edición</button>}
       </form>
 
-      {/* Tabla de turnos */}
+      {/* Tabla de turnosfiltrado */}
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
@@ -76,14 +86,17 @@ const { turnos, setTurnos, pacientes, profesionales } = useContext(TurnosContext
           </tr>
         </thead>
         <tbody>
-          {turnos.map(t => (
+          {turnosfiltrado.map(t => (
             <tr key={t.id} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
               <td>{getPacienteNombre(t.pacienteId)}</td>
               <td>{getProfesionalNombre(t.profesionalId)}</td>
               <td>{t.fecha}</td>
               <td>{t.hora}</td>
               <td>
-                <button style={btnStyle} onClick={() => handleEditar(t)}>Editar</button>{" "}
+                {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
+                  <button style={btnStyle} onClick={() => handleEditar(t)}>Editar</button>
+                  )
+                } 
                 <button style={{ ...btnStyle, backgroundColor: "#FF4C4C" }} onClick={() => handleCancelar(t.id)}>Cancelar</button>
               </td>
             </tr>

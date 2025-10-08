@@ -16,7 +16,23 @@ export const getInitialData = () => ({
     { id: 3, nombre: "Dra. Torres" }
   ],
   turnos: [
-    { id: 1, pacienteId: 1, profesionalId: 1, fecha: "2025-10-05", hora: "10:00" },
-    { id: 2, pacienteId: 2, profesionalId: 2, fecha: "2025-10-06", hora: "11:00" }
+      {
+    id: 1,
+    paciente: 1,
+    profesional: "Dra. Gómez",
+    fecha: "2025-10-08",
+    hora: "09:00",
+    especialidad: "Kinesiología",
+    sede: "Sede Central"
+  },
+  {
+    id: 2,
+    paciente: 2,
+    profesional: "Dr. Martínez",
+    fecha: "2025-10-08",
+    hora: "10:00",
+    especialidad: "Cardiología",
+    sede: "Sede Norte"
+  },
   ]
 });
