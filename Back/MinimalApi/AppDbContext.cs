@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Biblioteca; // <- para acceder a tus clases Paciente, Profesional, etc.
+using Biblioteca;
 
 public class AppDbContext : DbContext
 {
