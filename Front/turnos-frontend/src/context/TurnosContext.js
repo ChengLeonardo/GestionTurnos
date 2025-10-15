@@ -18,8 +18,8 @@ export const getInitialData = () => ({
   turnos: [
       {
     id: 1,
-    paciente: 1,
-    profesional: "Dra. Gómez",
+    pacienteId: 1,
+    profesionalId: 1,
     fecha: "2025-10-08",
     hora: "09:00",
     especialidad: "Kinesiología",
@@ -27,8 +27,8 @@ export const getInitialData = () => ({
   },
   {
     id: 2,
-    paciente: 2,
-    profesional: "Dr. Martínez",
+    pacienteId: 2,
+    profesionalId: 2,
     fecha: "2025-10-08",
     hora: "10:00",
     especialidad: "Cardiología",

@@ -8,6 +8,7 @@ import Pacientes from "./pages/Pacientes";
 import Profesionales from "./pages/Profesionales";
 import Reportes from "./pages/Reportes";
 import { AuthContext, useAuth } from "./context/AuthContext";
+import AsistenteVirtual from "./components/AsistenteVirtual";
 
 
 // 🔒 Componente de ruta privada
@@ -90,6 +91,8 @@ export default function App() {
           </PrivateRoute>
         } />
       </Routes>
+      {location.pathname !== "/login" && <AsistenteVirtual />}
+
     </>
   );
 }

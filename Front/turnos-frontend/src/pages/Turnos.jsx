@@ -11,7 +11,7 @@ const { turnos, setTurnos, pacientes, profesionales } = useContext(TurnosContext
   
   const turnosfiltrado = (usuario.rol === "admin" || usuario.rol === "asistente")
     ? turnos
-    : turnos.filter(t => t.paciente === usuario.id); // o id del paciente
+    : turnos.filter(t => t.pacienteId === usuario.id); // o id del paciente
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
