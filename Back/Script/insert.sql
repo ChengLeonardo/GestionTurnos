@@ -1,4 +1,4 @@
-USE gestion_turnos;
+USE Gestion_Turnos;
 
 -- Insertar algunas sedes
 INSERT INTO sede (Nombre, Direccion)

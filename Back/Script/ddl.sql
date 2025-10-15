@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS gestion_turnos;
-USE gestion_turnos;
+CREATE DATABASE IF NOT EXISTS Gestion_Turnos;
+USE Gestion_Turnos;
 
 CREATE TABLE Especialidad (
     IdEspecialidad INT AUTO_INCREMENT PRIMARY KEY,
