@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  frontend:
+    build: .
+    volumes:
+      - .:/app    # Monta tu carpeta local para desarrollo en vivo
+      - /app/node_modules  # Evita sobreescribir node_modules del contenedor
+    ports:
+      - "5173:5173"
+    stdin_open: true
+    tty: true
+
+#docker-compose up --build
