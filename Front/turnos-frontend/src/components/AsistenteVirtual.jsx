@@ -88,14 +88,17 @@ export default function AsistenteVirtual() {
         (p) => p.nombre.toLowerCase().includes(texto) || p.id.toString() === texto
       );
       if (paciente) {
-        const turnosPaciente = turnos.filter((t) => t.paciente === paciente.id);
+        const turnosPaciente = turnos.filter((t) => t.pacienteId === paciente.id);
         if (turnosPaciente.length === 0) {
-          setMessages((m) => [...m, { from: "bot", text: `${paciente.nombre} no tiene turnos.` }]);
+            setMessages((m) => [...m, { from: "bot", text: `${paciente.nombre} no tiene turnos.` }]);
         } else {
+          const profesional = profesionales.find(
+            (p) => p.id.toString() === turnosPaciente.profesionalId
+          )
           turnosPaciente.forEach((t) => {
             setMessages((m) => [
               ...m,
-              { from: "bot", text: `📅 ${t.fecha} a las ${t.hora} con ${t.profesional}` },
+              { from: "bot", text: `📅 ${t.fecha} a las ${t.hora} con ${profesional}` },
             ]);
           });
         }
