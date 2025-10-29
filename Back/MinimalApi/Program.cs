@@ -4,6 +4,18 @@ using Biblioteca;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // tu app React
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
+
 // Conexión MySQL 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
@@ -24,6 +36,9 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+app.UseCors("AllowReactApp");
+
 
 app.UseStaticFiles();
 

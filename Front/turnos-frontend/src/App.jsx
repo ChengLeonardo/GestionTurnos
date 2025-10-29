@@ -9,7 +9,8 @@ import Profesionales from "./pages/Profesionales";
 import Reportes from "./pages/Reportes";
 import { AuthContext, useAuth } from "./context/AuthContext";
 import AsistenteVirtual from "./components/AsistenteVirtual";
-
+import Sedes from "./pages/Sedes";
+import Especialidades from "./pages/Especialidades";
 
 // 🔒 Componente de ruta privada
 function PrivateRoute({ children }) {
@@ -83,7 +84,22 @@ export default function App() {
             </PrivateRoute>
           }
         />
-
+        <Route
+          path="/sedes"
+          element={
+            <PrivateRoute>
+              <Sedes />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/especialidades"
+          element={
+            <PrivateRoute>
+              <Especialidades />
+            </PrivateRoute>
+          }
+        />
         {/* Redirección por defecto */}
         <Route path="*" element={
           <PrivateRoute>

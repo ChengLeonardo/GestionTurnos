@@ -48,6 +48,8 @@ export default function Navbar() {
         )}
         {usuario?.rol === "admin" && (
           <>
+            <Link style={linkStyle} to="/sedes">Sedes</Link>
+            <Link style={linkStyle} to="/especialidades">Especialidades</Link>
             <Link style={linkStyle} to="/profesionales">Profesionales</Link>
             <Link style={linkStyle} to="/reportes">Reportes</Link>
           </>
