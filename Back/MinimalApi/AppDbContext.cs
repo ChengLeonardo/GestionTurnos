@@ -11,4 +11,18 @@ public class AppDbContext : DbContext
     public DbSet<Sede> Sedes { get; set; }
     public DbSet<Turno> Turnos { get; set; }
     public DbSet<Orden> Ordenes { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder); 
+
+        modelBuilder.Entity<Turno>()
+            .Property(t => t.Estado) 
+            .HasConversion<string>()  
+            .HasMaxLength(20);       
+
+        modelBuilder.Entity<Turno>()
+            .Property(t => t.RowVersion) // Configuración para RowVersion
+            .IsRowVersion(); // (control de concurrencia)
+    }
 }
