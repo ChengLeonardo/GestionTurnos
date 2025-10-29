@@ -11,7 +11,8 @@ public class AppDbContext : DbContext
     public DbSet<Sede> Sedes { get; set; }
     public DbSet<Turno> Turnos { get; set; }
     public DbSet<Orden> Ordenes { get; set; }
-
+    public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Rol> Rols { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder); 
