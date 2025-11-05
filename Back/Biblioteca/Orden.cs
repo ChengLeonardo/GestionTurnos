@@ -10,6 +10,7 @@ public class Orden
     [Key]
     public int Id {get;set;}
     public int PacienteId {get;set;}
+    public Paciente Paciente {get;set;}
     public string? Practica {get;set;}
     public bool Autorizada {get;set;}
     public DateTime FechaSubida {get;set;}

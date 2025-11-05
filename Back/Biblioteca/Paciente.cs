@@ -14,5 +14,5 @@ public class Paciente
     public required string Dni { get; set; }
     public string? Telefono { get; set; }
     public string? Email { get; set; }
-
+    public List<Turno> Turnos {get;set;}
 }

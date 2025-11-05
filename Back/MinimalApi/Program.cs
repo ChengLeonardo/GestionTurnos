@@ -1,6 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Biblioteca;
+using DTOs;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +20,7 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddScoped<Pass>();
 
 // Conexión MySQL 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -35,7 +41,40 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+
 var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    // fuerza autenticación global, excepto login o rutas públicas
+    if (context.Request.Path.StartsWithSegments("/api//login"))
+        await next();
+    else
+        await next();
+});
 
 app.UseCors("AllowReactApp");
 
@@ -51,8 +90,7 @@ app.UseSwaggerUI(c =>
 });
 
 // Endpoint raíz opcional para probar
-app.MapGet("/", () => Results.Ok("API Gestión de Turnos funcionando ✅"));
-
+app.MapGet("/", (Pass pass) => Results.Ok("API Gestión de Turnos funcionando ✅"));
 
 // Pacientes
 app.MapGet("/pacientes", async (AppDbContext db) =>
@@ -192,7 +230,16 @@ app.MapDelete("/especialidades/{id}", async (int id, AppDbContext db) =>
 // Turnos
 
 app.MapGet("/turnos", async (AppDbContext db) =>
-    await db.Turnos.ToListAsync());
+    await db.Turnos
+    .Include(t => t.Profesional)
+    .Include(t => t.Paciente)
+    .Select(t => new TurnoDto {
+                    Id = t.IdTurno,
+            FechaHoraInicio = t.FechaHoraInicio,
+            FechaHoraFin = t.FechaHoraFin,
+            ProfesionalNombre = t.Profesional.Nombre ?? "",
+            PacienteNombre = t.Paciente.Nombre ?? ""
+    }).ToListAsync());
 
 app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
 {
@@ -207,8 +254,6 @@ app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
     if (t is null) return Results.NotFound();
     t.FechaHoraInicio = data.FechaHoraInicio;
     t.FechaHoraFin = data.FechaHoraFin;
-    t.IdEspecialidad = data.IdEspecialidad;
-    t.IdSede = data.IdSede;
     t.IdProfesional = data.IdProfesional;
     t.IdPaciente = data.IdPaciente;
     t.Estado = data.Estado;

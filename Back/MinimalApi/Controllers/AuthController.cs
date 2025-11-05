@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Biblioteca;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MinimalApi.Controllers;
 
@@ -9,52 +13,81 @@ namespace MinimalApi.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
-        private readonly Pass _passwordService;
+    private readonly Pass _passwordService;
+    private readonly IConfiguration config;
 
-        public AuthController(AppDbContext context, Pass passwordService)
+    public AuthController(AppDbContext context, Pass passwordService)
+    {
+        _context = context;
+        _passwordService = passwordService;
+    }
+
+    // Login endpoint
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginModel model)
+    {
+        var user = await _context.Usuarios
+            .Include(u => u.Rol) // Incluimos la relación con el rol
+            .FirstOrDefaultAsync(u => u.Email == model.Email);
+
+        if (user == null || user.PasswordHash != _passwordService.HashPassword(model.Password))
         {
-            _context = context;
-            _passwordService = passwordService;
+            return Unauthorized("Credenciales incorrectas.");
+        }
+        var jwt = CreateJwtToken(user);
+        return Ok(new { token = jwt });
+
+    }
+
+    // Crear usuario 
+    [HttpPost("crear")]
+    public async Task<IActionResult> CrearUsuario([FromBody] Biblioteca.LoginModel.CrearUsuarioModel model)
+    {
+        var rol = await _context.Rols.FirstOrDefaultAsync(r => r.Nombre == model.Rol);
+        if (rol == null)
+        {
+            return BadRequest("Rol no encontrado.");
         }
 
-        // Login endpoint
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        var usuario = new Usuario
         {
-            var user = await _context.Usuarios
-                .Include(u => u.Rol) // Incluimos la relación con el rol
-                .FirstOrDefaultAsync(u => u.Email == model.Email);
+            Nombre = model.Nombre,
+            Email = model.Email,
+            PasswordHash = _passwordService.HashPassword(model.Password),
+            RolId = rol.IdRol
+        };
 
-            if (user == null || user.PasswordHash != _passwordService.HashPassword(model.Password))
-            {
-                return Unauthorized("Credenciales incorrectas.");
-            }
+        _context.Usuarios.Add(usuario);
+        await _context.SaveChangesAsync();
 
+        return Ok(usuario);
+    }
+        
 
-            return Ok(new { user.IdUsuario, user.Nombre, user.Rol }); 
-        }
+        
+    string CreateJwtToken(Usuario usuario)
+    {
+        var jwtSettings = config.GetSection("Jwt");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        // Crear usuario 
-        [HttpPost("crear")]
-        public async Task<IActionResult> CrearUsuario([FromBody] Biblioteca.LoginModel.CrearUsuarioModel model)
+        var claims = new[]
         {
-            var rol = await _context.Rols.FirstOrDefaultAsync(r => r.Nombre == model.Rol);
-            if (rol == null)
-            {
-                return BadRequest("Rol no encontrado.");
-            }
+            new Claim(JwtRegisteredClaimNames.Name, usuario.Nombre),
+            new Claim(ClaimTypes.Role, usuario.Rol.Nombre),
+            new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
 
-            var usuario = new Usuario
-            {
-                Nombre = model.Nombre,
-                Email = model.Email,
-                PasswordHash = _passwordService.HashPassword(model.Password),
-                RolId = rol.IdRol
-            };
+        var token = new JwtSecurityToken(
+            issuer: jwtSettings["Issuer"],
+            audience: jwtSettings["Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["ExpireMinutes"])),
+            signingCredentials: creds
+        );
 
-            _context.Usuarios.Add(usuario); 
-            await _context.SaveChangesAsync();
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 
-            return Ok(usuario);
-        }
     }

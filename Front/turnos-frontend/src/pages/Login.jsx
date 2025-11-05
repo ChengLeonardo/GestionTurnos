@@ -1,9 +1,9 @@
 import { useState,  } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/Auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { signin } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,7 +11,7 @@ export default function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const success = login(email, password);
+    const success = signin(email, password);
     if (success) navigate("/dashboard");
     else setError("Credenciales incorrectas");
   };

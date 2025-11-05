@@ -1,36 +1,40 @@
 // src/api/pacientesService.js
-const API_URL = "http://localhost:5177/pacientes";
+import api from "./api";
+
+const API_URL = "/pacientes";
 
 export async function getPacientes() {
-  const res = await fetch(API_URL);
-  if (!res.ok) throw new Error("Error al obtener pacientes");
-  return res.json();
+  try {
+    const res = await api.get(API_URL);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al obtener pacientes");
+  }
 }
 
 export async function crearPaciente(data) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al crear paciente");
-  return res.json();
+  try {
+    const res = await api.post(API_URL, data);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al crear paciente");
+  }
 }
 
 export async function editarPaciente(id, paciente) {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(paciente),
-  });
-  if (!res.ok) throw new Error("Error al editar paciente");
-  return res.json();
+  try {
+    const res = await api.put(`${API_URL}/${id}`, paciente);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al editar paciente");
+  }
 }
 
 export async function eliminarPaciente(id) {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar paciente");
-  return true;
+  try {
+    await api.delete(`${API_URL}/${id}`);
+    return true;
+  } catch (err) {
+    throw new Error("Error al eliminar paciente");
+  }
 }

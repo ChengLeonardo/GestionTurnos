@@ -1,26 +1,31 @@
 // src/api/turnosService.js
-const API_URL = "http://localhost:5177/turnos";
+import api from "./api";
+
+const API_URL = "/turnos";
 
 export async function getTurnos() {
-  const res = await fetch(API_URL);
-  if (!res.ok) throw new Error("Error al obtener turnos");
-  return res.json();
+  try {
+    const res = await api.get(API_URL);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al obtener turnos");
+  }
 }
 
 export async function crearTurno(data) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al crear turno");
-  return res.json();
+  try {
+    const res = await api.post(API_URL, data);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al crear turno");
+  }
 }
 
 export async function eliminarTurno(id) {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar turno");
-  return true;
+  try {
+    await api.delete(`${API_URL}/${id}`);
+    return true;
+  } catch (err) {
+    throw new Error("Error al eliminar turno");
+  }
 }

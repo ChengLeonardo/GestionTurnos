@@ -1,11 +1,3 @@
-import { useState, useEffect, createContext } from "react";
-import * as TurnosService from "../api/turnosService";
-import * as EspecialidadesService from "../api/especialidadesService";
-import * as PacientesService from "../api/pacientesService";
-import * as ProfesionalesService from "../api/profesionalesService";
-import * as SedesService from "../api/sedesService";
-
-export const TurnosContext = createContext();
 
 export function TurnosProvider({ children }) {
   const [pacientes, setPacientes] = useState([]);

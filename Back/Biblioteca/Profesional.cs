@@ -14,4 +14,5 @@ public class Profesional
     public Especialidad? Especialidad {get;set;}
     public int IdSede {get;set;}
     public Sede? Sede {get;set;}
+    public List<Turno> Turnos {get;set;}
 }

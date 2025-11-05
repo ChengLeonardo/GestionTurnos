@@ -1,37 +1,40 @@
-// src/api/especialidadsService.js
-const API_URL = "http://localhost:5177/especialidades";
+// especialidadesService.js
+import api from "./api";
+
+const API_URL = "/especialidades";
 
 export async function getEspecialidades() {
-  const res = await fetch(API_URL);
-  if (!res.ok) throw new Error("Error al obtener especialidades");
-  return res.json();
+  try {
+    const res = await api.get(API_URL);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al obtener especialidades");
+  }
 }
 
-
 export async function crearEspecialidad(data) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al crear especialidad");
-  return res.json();
+  try {
+    const res = await api.post(API_URL, data);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al crear especialidad");
+  }
 }
 
 export async function editarEspecialidad(id, especialidad) {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(especialidad)
-  });
-  if (!res.ok) throw new Error("Error al editar especialidad");
-  return await res.json();
+  try {
+    const res = await api.put(`${API_URL}/${id}`, especialidad);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al editar especialidad");
+  }
 }
 
 export async function eliminarEspecialidad(id) {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar especialidad");
-  return true;
+  try {
+    await api.delete(`${API_URL}/${id}`);
+    return true;
+  } catch (err) {
+    throw new Error("Error al eliminar especialidad");
+  }
 }

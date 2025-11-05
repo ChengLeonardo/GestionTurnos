@@ -23,11 +23,19 @@ VALUES ('Ana Torres', '40111222', '1133445566', 'ana@mail.com'),
         ('Luis Fernandez', '38222111', '1144556677', 'luis@mail.com');
 
 -- Insertar turnos
-INSERT INTO turnos (FechaHoraInicio, FechaHoraFin, IdEspecialidad, IdSede, IdProfesional, IdPaciente, Estado, RowVersion)
-VALUES ('2025-10-02 09:00:00', '2025-10-02 09:30:00', 1, 1, 1, 1, 1, '01'),
-        ('2025-10-02 10:00:00', '2025-10-02 10:30:00', 2, 2, 2, 2, 0, '01');
+INSERT INTO turnos (FechaHoraInicio, FechaHoraFin, IdProfesional, IdPaciente, Estado, RowVersion)
+VALUES ('2025-10-02 09:00:00', '2025-10-02 09:30:00', 1, 1, 1, '01'),
+        ('2025-10-02 10:00:00', '2025-10-02 10:30:00', 2, 2, 0, '01');
 
 -- Insertar órdenes
 INSERT INTO ordenes (PacienteId, Practica, Autorizada, FechaSubida)
 VALUES (1, 'Kinesiologia', TRUE, NOW()),
         (2, 'Cardiologia', FALSE, NOW());
+
+INSERT INTO rols(Nombre)
+VALUES ("Admin"),
+        ("Usuario");
+
+INSERT INTO usuarios(Nombre, Email, PasswordHash, RolId)
+VALUES ("Admin", "admin@gmail.com", "aBwpwGwTKnUsDmpvPgT/p2DIaOdQyHYX5L/2053DQJM=", 1),
+        ("Usuario1", "usuario@gmail.com", "uGHk5ENZe04kQT71hrsnohGOP7uinQMDOU1UkqBDO94=", 2);
