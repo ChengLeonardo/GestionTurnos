@@ -29,3 +29,12 @@ export async function eliminarTurno(id) {
     throw new Error("Error al eliminar turno");
   }
 }
+
+export async function editarTurno(id, data) {
+  try {
+    const res = await api.put(`${API_URL}/${id}`, data);
+    return res.data;
+  } catch (err) {
+    throw new Error("Error al editar turno");
+  }
+}

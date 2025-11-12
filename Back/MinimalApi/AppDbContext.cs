@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Orden> Ordenes { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Rol> Rols { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder); 
@@ -21,12 +22,6 @@ public class AppDbContext : DbContext
             .Property(t => t.Estado) 
             .HasConversion<string>()  
             .HasMaxLength(20);    
-
-        modelBuilder.Entity<Turno>()
-            .Property(t => t.RowVersion)
-            .IsConcurrencyToken()
-            .ValueGeneratedOnAddOrUpdate()
-            .HasColumnType("varbinary(8)");
             
         modelBuilder.Entity<Turno>()
             .HasOne(t => t.Profesional)
@@ -37,6 +32,34 @@ public class AppDbContext : DbContext
             .WithMany(p => p.Turnos)
             .HasForeignKey(t => t.IdPaciente);
 
+        modelBuilder.Entity<Profesional>()
+            .HasOne(p => p.Sede)
+            .WithMany(s => s.Profesionales)
+            .HasForeignKey(p => p.IdSede);
 
+        modelBuilder.Entity<Profesional>()
+            .HasOne(p => p.Especialidad)
+            .WithMany(e => e.Profesionales)
+            .HasForeignKey(p => p.IdEspecialidad);
+
+        modelBuilder.Entity<Sede>()
+            .HasMany(s => s.Profesionales)
+            .WithOne(p => p.Sede)
+            .HasForeignKey(p => p.IdSede);
+
+        modelBuilder.Entity<Especialidad>()
+            .HasMany(e => e.Profesionales)
+            .WithOne(p => p.Especialidad)
+            .HasForeignKey(p => p.IdEspecialidad);
+
+        modelBuilder.Entity<Orden>()
+            .HasOne(o => o.Paciente)
+            .WithMany(p => p.Ordenes)
+            .HasForeignKey(o => o.IdPaciente);
+
+        modelBuilder.Entity<Orden>()
+            .HasOne(o => o.DerivadaAProfesional)
+            .WithMany(p => p.Ordenes)
+            .HasForeignKey(o => o.DerivadaAProfesionalId);
     }
 }

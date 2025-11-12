@@ -15,4 +15,5 @@ public class Paciente
     public string? Telefono { get; set; }
     public string? Email { get; set; }
     public List<Turno> Turnos {get;set;}
+    public List<Orden> Ordenes {get;set;}
 }

@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { TurnosContext } from "../context/TurnosContext";
+import { TurnosContext } from "../context/Turnos/TurnosContext";
 
 export default function Especialidades() {
   const { especialidades, crearEspecialidad, editarEspecialidad, eliminarEspecialidad, loading } =

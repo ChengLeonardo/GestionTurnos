@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/Auth/useAuth";
 
 export default function Dashboard() {
   const { usuario } = useAuth();
-
+  console.log("Usuario:", usuario);
   if (!usuario) return <p>Por favor inicia sesión.</p>;
 
   return (

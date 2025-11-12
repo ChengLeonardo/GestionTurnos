@@ -1,8 +1,8 @@
 import { useContext, useState } from "react";
-import { TurnosContext } from "../context/TurnosContext";
+import { TurnosContext } from "../context/Turnos/TurnosContext";
 
 export default function Profesionales() {
-  const { profesionales, especialidades, sedes, crearProfesional, eliminarProfesional } =
+  const { profesionales, especialidades, sedes, crearProfesional, eliminarProfesional, editarProfesional } =
     useContext(TurnosContext);
 
   const [form, setForm] = useState({
@@ -23,8 +23,7 @@ export default function Profesionales() {
 
     try {
       if (editingId) {
-        // Actualizar localmente (aún sin PUT en backend)
-        alert("Edición local, aún sin endpoint PUT implementado");
+        await editarProfesional(editingId, form);
         setEditingId(null);
       } else {
         const nuevoProfesional = {
@@ -140,9 +139,9 @@ export default function Profesionales() {
               style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}
             >
               <td>{p.nombre}</td>
-              <td>{p.especialidad?.nombre || "-"}</td>
-              <td>{p.sede?.nombre || "-"}</td>
-              <td>{p.sede?.direccion || "-"}</td>
+              <td>{p.especialidad || "-"}</td>
+              <td>{p.sede || "-"}</td>
+              <td>{p.direccion || "-"}</td>
               <td>
                 <button style={btnStyle} onClick={() => handleEditar(p)}>
                   Editar

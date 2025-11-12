@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using MinimalApi.Endpoints;
+using MinimalApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<Pass>();
-
+builder.Services.AddControllers();
 // Conexión MySQL 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
@@ -64,6 +66,13 @@ builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
+
+app.MapControllers();
+app.MapUsersEndpoints();
+app.MapRolesEndpoints();
+app.MapOrdenesEndpoints();
+app.MapAuditEndpoints();
+app.UseAuditLog();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -98,7 +107,7 @@ app.MapGet("/pacientes", async (AppDbContext db) =>
 
 app.MapGet("/pacientes/{id}", async (int id, AppDbContext db) =>
 {
-    var p = await db.Pacientes.FindAsync(id);
+    var p = await db.Pacientes.Where(p => p.IdPaciente == id).FirstOrDefaultAsync();
     return p is not null ? Results.Ok(p) : Results.NotFound("Paciente no encontrado");
 });
 
@@ -111,7 +120,7 @@ app.MapPost("/pacientes", async (Paciente paciente, AppDbContext db) =>
 
 app.MapPut("/pacientes/{id}", async (int id, Paciente data, AppDbContext db) =>
 {
-    var p = await db.Pacientes.FindAsync(id);
+    var p = await db.Pacientes.Where(p => p.IdPaciente == id).FirstOrDefaultAsync();
     if (p is null) return Results.NotFound("Paciente no encontrado");
 
     p.Nombre = data.Nombre;
@@ -125,7 +134,7 @@ app.MapPut("/pacientes/{id}", async (int id, Paciente data, AppDbContext db) =>
 
 app.MapDelete("/pacientes/{id}", async (int id, AppDbContext db) =>
 {
-    var p = await db.Pacientes.FindAsync(id);
+    var p = await db.Pacientes.Where(p => p.IdPaciente == id).FirstOrDefaultAsync();
     if (p is null) return Results.NotFound("Paciente no encontrado");
 
     db.Pacientes.Remove(p);
@@ -137,11 +146,21 @@ app.MapDelete("/pacientes/{id}", async (int id, AppDbContext db) =>
 app.MapGet("/profesionales", async (AppDbContext db) => await db.Profesionales
     .Include(p => p.Especialidad)
     .Include(p => p.Sede)
+    .Select(p => new ProfesionalDto
+    {
+        IdProfesional = p.IdProfesional,
+        IdEspecialidad = p.IdEspecialidad,
+        IdSede = p.IdSede,
+        Nombre = p.Nombre,
+        Especialidad = p.Especialidad.Nombre,
+        Sede = p.Sede.Nombre,
+        Direccion = p.Sede.Direccion
+    })
     .ToListAsync());
 
 app.MapGet("/profesionales/{id}", async (int id, AppDbContext db) =>
 {
-    var prof = await db.Profesionales.FindAsync(id);
+    var prof = await db.Profesionales.Where(p => p.IdProfesional == id).FirstOrDefaultAsync();
     return prof is not null ? Results.Ok(prof) : Results.NotFound("Profesional no encontrado");
 });
 
@@ -149,12 +168,24 @@ app.MapPost("/profesionales", async (Profesional prof, AppDbContext db) =>
 {
     db.Profesionales.Add(prof);
     await db.SaveChangesAsync();
-    return Results.Created($"/profesionales/{prof.IdProfesional}", prof);
+    var especialidad = await db.Especialidades.Where(e => e.IdEspecialidad == prof.IdEspecialidad).FirstOrDefaultAsync();
+    var sede = await db.Sedes.Where(s => s.IdSede == prof.IdSede).FirstOrDefaultAsync();
+    var profesionalConDato = new ProfesionalDto
+    {
+        IdProfesional = prof.IdProfesional,
+        IdEspecialidad = prof.IdEspecialidad,
+        IdSede = prof.IdSede,
+        Nombre = prof.Nombre,
+        Especialidad = especialidad.Nombre,
+        Sede = sede.Nombre,
+        Direccion = sede.Direccion
+    };
+    return Results.Created($"/profesionales/{prof.IdProfesional}", profesionalConDato);
 });
 
 app.MapPut("/profesionales/{id}", async (int id, Profesional data, AppDbContext db) =>
 {
-    var prof = await db.Profesionales.FindAsync(id);
+    var prof = await db.Profesionales.Where(p => p.IdProfesional == id).FirstOrDefaultAsync();
     if (prof is null) return Results.NotFound();
 
     prof.Nombre = data.Nombre;
@@ -162,12 +193,24 @@ app.MapPut("/profesionales/{id}", async (int id, Profesional data, AppDbContext 
     prof.IdSede = data.IdSede;
     await db.SaveChangesAsync();
 
-    return Results.Ok(prof);
+    var especialidad = await db.Especialidades.Where(e => e.IdEspecialidad == prof.IdEspecialidad).FirstOrDefaultAsync();
+    var sede = await db.Sedes.Where(s => s.IdSede == prof.IdSede).FirstOrDefaultAsync();
+    var profesionalConDato = new ProfesionalDto
+    {
+        IdProfesional = prof.IdProfesional,
+        IdEspecialidad = prof.IdEspecialidad,
+        IdSede = prof.IdSede,
+        Nombre = prof.Nombre,
+        Especialidad = especialidad.Nombre,
+        Sede = sede.Nombre,
+        Direccion = sede.Direccion
+    };
+    return Results.Ok(profesionalConDato);
 });
 
 app.MapDelete("/profesionales/{id}", async (int id, AppDbContext db) =>
 {
-    var prof = await db.Profesionales.FindAsync(id);
+    var prof = await db.Profesionales.Where(p => p.IdProfesional == id).FirstOrDefaultAsync();
     if (prof is null) return Results.NotFound();
 
     db.Profesionales.Remove(prof);
@@ -181,11 +224,11 @@ app.MapPost("/sedes", async (Sede sede, AppDbContext db) =>
 {
     db.Sedes.Add(sede);
     await db.SaveChangesAsync();
-    return Results.Created($"/sedes/{sede.IdSede}", sede);
+    return Results.Created($"/sedes/{sede.IdSede}", sede);  
 });
 app.MapPut("/sedes/{id}", async (int id, Sede data, AppDbContext db) =>
 {
-    var s = await db.Sedes.FindAsync(id);
+    var s = await db.Sedes.Where(s => s.IdSede == id).FirstOrDefaultAsync();
     if (s is null) return Results.NotFound();
     s.Nombre = data.Nombre;
     s.Direccion = data.Direccion;
@@ -194,7 +237,7 @@ app.MapPut("/sedes/{id}", async (int id, Sede data, AppDbContext db) =>
 });
 app.MapDelete("/sedes/{id}", async (int id, AppDbContext db) =>
 {
-    var s = await db.Sedes.FindAsync(id);
+    var s = await db.Sedes.Where(s => s.IdSede == id).FirstOrDefaultAsync();
     if (s is null) return Results.NotFound();
     db.Sedes.Remove(s);
     await db.SaveChangesAsync();
@@ -212,7 +255,7 @@ app.MapPost("/especialidades", async (Especialidad esp, AppDbContext db) =>
 });
 app.MapPut("/especialidades/{id}", async (int id, Especialidad data, AppDbContext db) =>
 {
-    var e = await db.Especialidades.FindAsync(id);
+    var e = await db.Especialidades.Where(e => e.IdEspecialidad == id).FirstOrDefaultAsync();
     if (e is null) return Results.NotFound();
     e.Nombre = data.Nombre;
     await db.SaveChangesAsync();
@@ -220,7 +263,7 @@ app.MapPut("/especialidades/{id}", async (int id, Especialidad data, AppDbContex
 });
 app.MapDelete("/especialidades/{id}", async (int id, AppDbContext db) =>
 {
-    var e = await db.Especialidades.FindAsync(id);
+    var e = await db.Especialidades.Where(e => e.IdEspecialidad == id).FirstOrDefaultAsync();
     if (e is null) return Results.NotFound();
     db.Especialidades.Remove(e);
     await db.SaveChangesAsync();
@@ -238,11 +281,35 @@ app.MapGet("/turnos", async (AppDbContext db) =>
             FechaHoraInicio = t.FechaHoraInicio,
             FechaHoraFin = t.FechaHoraFin,
             ProfesionalNombre = t.Profesional.Nombre ?? "",
-            PacienteNombre = t.Paciente.Nombre ?? ""
+            PacienteNombre = t.Paciente.Nombre ?? "",
+            IdPaciente = t.IdPaciente,
+            IdProfesional = t.IdProfesional,
+            Estado = t.Estado.ToString()
     }).ToListAsync());
 
 app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
-{
+{   
+    // Validation Logic for Kinesiologia
+    // Turno doesn't have IdEspecialidad directly, we need to get it from the Professional
+    var profesional = await db.Profesionales.FindAsync(turno.IdProfesional);
+    if (profesional != null)
+    {
+        var especialidad = await db.Especialidades.FindAsync(profesional.IdEspecialidad);
+        if (especialidad != null && especialidad.Nombre.Contains("Kinesiologia", StringComparison.OrdinalIgnoreCase))
+        {
+            // Check if patient has an authorized order
+            var orden = await db.Ordenes
+                .Where(o => o.IdPaciente == turno.IdPaciente && o.Practica == "Kinesiologia" && o.Autorizada)
+                .OrderByDescending(o => o.FechaSubida)
+                .FirstOrDefaultAsync();
+
+            if (orden == null)
+            {
+                return Results.BadRequest("Se requiere una orden médica autorizada para Kinesiología.");
+            }
+        }
+    }
+
     db.Turnos.Add(turno);
     await db.SaveChangesAsync();
     return Results.Created($"/turnos/{turno.IdTurno}", turno);
@@ -250,7 +317,7 @@ app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
 
 app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
 {
-    var t = await db.Turnos.FindAsync(id);
+    var t = await db.Turnos.Where(t => t.IdTurno == id).FirstOrDefaultAsync();
     if (t is null) return Results.NotFound();
     t.FechaHoraInicio = data.FechaHoraInicio;
     t.FechaHoraFin = data.FechaHoraFin;
@@ -263,7 +330,7 @@ app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
 
 app.MapDelete("/turnos/{id}", async (int id, AppDbContext db) =>
 {
-    var t = await db.Turnos.FindAsync(id);
+    var t = await db.Turnos.Where(t => t.IdTurno == id).FirstOrDefaultAsync();
     if (t is null) return Results.NotFound();
     db.Turnos.Remove(t);
     await db.SaveChangesAsync();

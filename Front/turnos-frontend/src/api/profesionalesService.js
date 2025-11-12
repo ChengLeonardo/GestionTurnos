@@ -23,8 +23,6 @@ export async function crearProfesional(data) {
 
 export async function editarProfesional(id, profesional) {
   try {
-    // ⚠️ Asegurate de que la ruta correcta sea /profesionales/{id}
-    // (sacamos "/Profesional/" porque probablemente tu API usa plural)
     const res = await api.put(`${API_URL}/${id}`, profesional);
     return res.data;
   } catch (err) {

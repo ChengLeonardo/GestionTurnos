@@ -16,10 +16,11 @@ public class AuthController : ControllerBase
     private readonly Pass _passwordService;
     private readonly IConfiguration config;
 
-    public AuthController(AppDbContext context, Pass passwordService)
+    public AuthController(AppDbContext context, Pass passwordService, IConfiguration    configuration)
     {
         _context = context;
         _passwordService = passwordService;
+        config = configuration;
     }
 
     // Login endpoint
@@ -32,6 +33,8 @@ public class AuthController : ControllerBase
 
         if (user == null || user.PasswordHash != _passwordService.HashPassword(model.Password))
         {
+            Console.WriteLine(_passwordService.HashPassword(model.Password));
+            Console.WriteLine(user.PasswordHash);
             return Unauthorized("Credenciales incorrectas.");
         }
         var jwt = CreateJwtToken(user);

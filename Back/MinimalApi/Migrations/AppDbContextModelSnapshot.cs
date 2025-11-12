@@ -21,6 +21,37 @@ namespace MinimalApi.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Biblioteca.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Detalles")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("FechaHora")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("Biblioteca.Especialidad", b =>
                 {
                     b.Property<int>("IdEspecialidad")
@@ -54,7 +85,7 @@ namespace MinimalApi.Migrations
                     b.Property<DateTime>("FechaSubida")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("PacienteId")
+                    b.Property<int>("IdPaciente")
                         .HasColumnType("int");
 
                     b.Property<string>("Practica")
@@ -62,7 +93,9 @@ namespace MinimalApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PacienteId");
+                    b.HasIndex("DerivadaAProfesionalId");
+
+                    b.HasIndex("IdPaciente");
 
                     b.ToTable("Ordenes");
                 });
@@ -101,9 +134,6 @@ namespace MinimalApi.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdProfesional"));
 
-                    b.Property<int?>("EspecialidadIdEspecialidad")
-                        .HasColumnType("int");
-
                     b.Property<int>("IdEspecialidad")
                         .HasColumnType("int");
 
@@ -113,14 +143,11 @@ namespace MinimalApi.Migrations
                     b.Property<string>("Nombre")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("SedeIdSede")
-                        .HasColumnType("int");
-
                     b.HasKey("IdProfesional");
 
-                    b.HasIndex("EspecialidadIdEspecialidad");
+                    b.HasIndex("IdEspecialidad");
 
-                    b.HasIndex("SedeIdSede");
+                    b.HasIndex("IdSede");
 
                     b.ToTable("Profesionales");
                 });
@@ -185,12 +212,6 @@ namespace MinimalApi.Migrations
                     b.Property<int?>("IdProfesional")
                         .HasColumnType("int");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("varbinary(8)");
-
                     b.HasKey("IdTurno");
 
                     b.HasIndex("IdPaciente");
@@ -230,11 +251,17 @@ namespace MinimalApi.Migrations
 
             modelBuilder.Entity("Biblioteca.Orden", b =>
                 {
+                    b.HasOne("Biblioteca.Profesional", "DerivadaAProfesional")
+                        .WithMany("Ordenes")
+                        .HasForeignKey("DerivadaAProfesionalId");
+
                     b.HasOne("Biblioteca.Paciente", "Paciente")
-                        .WithMany()
-                        .HasForeignKey("PacienteId")
+                        .WithMany("Ordenes")
+                        .HasForeignKey("IdPaciente")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DerivadaAProfesional");
 
                     b.Navigation("Paciente");
                 });
@@ -243,11 +270,15 @@ namespace MinimalApi.Migrations
                 {
                     b.HasOne("Biblioteca.Especialidad", "Especialidad")
                         .WithMany("Profesionales")
-                        .HasForeignKey("EspecialidadIdEspecialidad");
+                        .HasForeignKey("IdEspecialidad")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Biblioteca.Sede", "Sede")
                         .WithMany("Profesionales")
-                        .HasForeignKey("SedeIdSede");
+                        .HasForeignKey("IdSede")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Especialidad");
 
@@ -289,11 +320,15 @@ namespace MinimalApi.Migrations
 
             modelBuilder.Entity("Biblioteca.Paciente", b =>
                 {
+                    b.Navigation("Ordenes");
+
                     b.Navigation("Turnos");
                 });
 
             modelBuilder.Entity("Biblioteca.Profesional", b =>
                 {
+                    b.Navigation("Ordenes");
+
                     b.Navigation("Turnos");
                 });
 

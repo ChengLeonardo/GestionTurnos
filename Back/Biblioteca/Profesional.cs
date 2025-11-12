@@ -15,4 +15,5 @@ public class Profesional
     public int IdSede {get;set;}
     public Sede? Sede {get;set;}
     public List<Turno> Turnos {get;set;}
+    public List<Orden> Ordenes {get;set;}
 }

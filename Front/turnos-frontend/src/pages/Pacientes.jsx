@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from "react";
-import { TurnosContext } from "../context/TurnosContext";
+import { TurnosContext } from "../context/Turnos/TurnosContext";
 
 export default function Pacientes() {
   const {
@@ -71,7 +71,7 @@ export default function Pacientes() {
           style={inputStyle}
         />
         <input
-          type="text"
+          type="number"
           name="dni"
           placeholder="DNI"
           value={form.dni}
@@ -80,7 +80,7 @@ export default function Pacientes() {
           style={inputStyle}
         />
         <input
-          type="text"
+          type="number"
           name="telefono"
           placeholder="Teléfono"
           value={form.telefono}
@@ -89,7 +89,7 @@ export default function Pacientes() {
           style={inputStyle}
         />
         <input
-          type="text"
+          type="email"
           name="email"
           placeholder="Email"
           value={form.email}

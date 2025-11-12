@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MinimalApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251029184019_EstadoEnum")]
-    partial class EstadoEnum
+    [Migration("20251126214023_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -57,13 +57,17 @@ namespace MinimalApi.Migrations
                     b.Property<DateTime>("FechaSubida")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("PacienteId")
+                    b.Property<int>("IdPaciente")
                         .HasColumnType("int");
 
                     b.Property<string>("Practica")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DerivadaAProfesionalId");
+
+                    b.HasIndex("IdPaciente");
 
                     b.ToTable("Ordenes");
                 });
@@ -102,9 +106,6 @@ namespace MinimalApi.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdProfesional"));
 
-                    b.Property<int?>("EspecialidadIdEspecialidad")
-                        .HasColumnType("int");
-
                     b.Property<int>("IdEspecialidad")
                         .HasColumnType("int");
 
@@ -114,16 +115,29 @@ namespace MinimalApi.Migrations
                     b.Property<string>("Nombre")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("SedeIdSede")
-                        .HasColumnType("int");
-
                     b.HasKey("IdProfesional");
 
-                    b.HasIndex("EspecialidadIdEspecialidad");
+                    b.HasIndex("IdEspecialidad");
 
-                    b.HasIndex("SedeIdSede");
+                    b.HasIndex("IdSede");
 
                     b.ToTable("Profesionales");
+                });
+
+            modelBuilder.Entity("Biblioteca.Rol", b =>
+                {
+                    b.Property<int>("IdRol")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdRol"));
+
+                    b.Property<string>("Nombre")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("IdRol");
+
+                    b.ToTable("Rols");
                 });
 
             modelBuilder.Entity("Biblioteca.Sede", b =>
@@ -164,41 +178,140 @@ namespace MinimalApi.Migrations
                     b.Property<DateTime>("FechaHoraInicio")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("IdEspecialidad")
-                        .HasColumnType("int");
-
                     b.Property<int>("IdPaciente")
                         .HasColumnType("int");
 
                     b.Property<int?>("IdProfesional")
                         .HasColumnType("int");
 
-                    b.Property<int>("IdSede")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp(6)");
-
                     b.HasKey("IdTurno");
 
+                    b.HasIndex("IdPaciente");
+
+                    b.HasIndex("IdProfesional");
+
                     b.ToTable("Turnos");
+                });
+
+            modelBuilder.Entity("Biblioteca.Usuario", b =>
+                {
+                    b.Property<int>("IdUsuario")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdUsuario"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Nombre")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("RolId")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdUsuario");
+
+                    b.HasIndex("RolId");
+
+                    b.ToTable("Usuarios");
+                });
+
+            modelBuilder.Entity("Biblioteca.Orden", b =>
+                {
+                    b.HasOne("Biblioteca.Profesional", "DerivadaAProfesional")
+                        .WithMany("Ordenes")
+                        .HasForeignKey("DerivadaAProfesionalId");
+
+                    b.HasOne("Biblioteca.Paciente", "Paciente")
+                        .WithMany("Ordenes")
+                        .HasForeignKey("IdPaciente")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DerivadaAProfesional");
+
+                    b.Navigation("Paciente");
                 });
 
             modelBuilder.Entity("Biblioteca.Profesional", b =>
                 {
                     b.HasOne("Biblioteca.Especialidad", "Especialidad")
-                        .WithMany()
-                        .HasForeignKey("EspecialidadIdEspecialidad");
+                        .WithMany("Profesionales")
+                        .HasForeignKey("IdEspecialidad")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Biblioteca.Sede", "Sede")
-                        .WithMany()
-                        .HasForeignKey("SedeIdSede");
+                        .WithMany("Profesionales")
+                        .HasForeignKey("IdSede")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Especialidad");
 
                     b.Navigation("Sede");
+                });
+
+            modelBuilder.Entity("Biblioteca.Turno", b =>
+                {
+                    b.HasOne("Biblioteca.Paciente", "Paciente")
+                        .WithMany("Turnos")
+                        .HasForeignKey("IdPaciente")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Biblioteca.Profesional", "Profesional")
+                        .WithMany("Turnos")
+                        .HasForeignKey("IdProfesional");
+
+                    b.Navigation("Paciente");
+
+                    b.Navigation("Profesional");
+                });
+
+            modelBuilder.Entity("Biblioteca.Usuario", b =>
+                {
+                    b.HasOne("Biblioteca.Rol", "Rol")
+                        .WithMany("Usuarios")
+                        .HasForeignKey("RolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Rol");
+                });
+
+            modelBuilder.Entity("Biblioteca.Especialidad", b =>
+                {
+                    b.Navigation("Profesionales");
+                });
+
+            modelBuilder.Entity("Biblioteca.Paciente", b =>
+                {
+                    b.Navigation("Ordenes");
+
+                    b.Navigation("Turnos");
+                });
+
+            modelBuilder.Entity("Biblioteca.Profesional", b =>
+                {
+                    b.Navigation("Ordenes");
+
+                    b.Navigation("Turnos");
+                });
+
+            modelBuilder.Entity("Biblioteca.Rol", b =>
+                {
+                    b.Navigation("Usuarios");
+                });
+
+            modelBuilder.Entity("Biblioteca.Sede", b =>
+                {
+                    b.Navigation("Profesionales");
                 });
 #pragma warning restore 612, 618
         }

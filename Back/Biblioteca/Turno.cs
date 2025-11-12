@@ -16,5 +16,4 @@ public class Turno
     public int IdPaciente {get;set;}
     public Paciente Paciente {get;set;}
     public TurnoEstado Estado {get;set;}  = TurnoEstado.Solicitado;
-    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 }

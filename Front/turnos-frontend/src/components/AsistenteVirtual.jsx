@@ -1,13 +1,14 @@
 import React, { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { TurnosContext } from "../context/TurnosContext";
+import { useAuth } from "../context/Auth/useAuth";
+import { TurnosContext } from "../context/Turnos/TurnosContext";
 
 export default function AsistenteVirtual() {
-  const { usuario } = useContext(AuthContext);
-  const { pacientes, profesionales, turnos, setTurnos } = useContext(TurnosContext);
+  const { usuario } = useAuth();
+  const { profesionales, crearTurno } = useContext(TurnosContext);
 
   const [messages, setMessages] = useState([
-    { from: "bot", text: `Hola ${usuario?.email || "visitante"} 👋 ¿En qué puedo ayudarte hoy?` },
+    { from: "bot", text: `¡Hola ${usuario?.nombre || "visitante"}! 👋 Soy tu asistente virtual para sacar turnos.` },
+    { from: "bot", text: "Por favor, selecciona una opción:\n\n1️⃣ Ver profesionales disponibles\n2️⃣ Sacar un turno nuevo\n3️⃣ Ayuda\n\nEscribe el número de la opción que deseas." }
   ]);
   const [input, setInput] = useState("");
   const [estado, setEstado] = useState(null);
@@ -20,165 +21,136 @@ export default function AsistenteVirtual() {
     if (!input.trim()) return;
     const nuevoMensaje = { from: "user", text: input };
     setMessages((prev) => [...prev, nuevoMensaje]);
-    procesarMensaje(input.trim().toLowerCase());
+    procesarMensaje(input.trim());
     setInput("");
   };
 
   const procesarMensaje = (texto) => {
     // --- MENÚ PRINCIPAL ---
     if (!estado) {
-      if (texto.includes("turno")) {
-        setMessages((m) => [...m, { from: "bot", text: "¿Querés ver tus turnos o sacar uno nuevo?" }]);
-        setEstado("menuTurnos");
-      } else if (texto.includes("profesional")) {
-        setMessages((m) => [...m, { from: "bot", text: "Estos son los profesionales disponibles:" }]);
+      if (texto === "1") {
+        setMessages((m) => [...m, { from: "bot", text: "📋 Profesionales disponibles:" }]);
         profesionales.forEach((p) => {
-          setMessages((m) => [...m, { from: "bot", text: `👩‍⚕️ ${p.nombre}` }]);
+          setMessages((m) => [...m, { from: "bot", text: `👨‍⚕️ ${p.nombre} - ${p.especialidad || "General"}` }]);
         });
-      } else {
-        setMessages((m) => [
-          ...m,
-          { from: "bot", text: "Puedo ayudarte con tus turnos o información de profesionales." },
-        ]);
-      }
-    }
-
-    // --- MENÚ TURNOS ---
-    else if (estado === "menuTurnos") {
-      if (texto.includes("ver")) {
-        if (usuario.rol === "usuario") {
-          const misTurnos = turnos.filter((t) => t.paciente === usuario.id);
-          if (misTurnos.length === 0) {
-            setMessages((m) => [...m, { from: "bot", text: "No tenés turnos próximos." }]);
-          } else {
-            misTurnos.forEach((t) => {
-              setMessages((m) => [
-                ...m,
-                { from: "bot", text: `📅 ${t.fecha} a las ${t.hora} con ${t.profesional}` },
-              ]);
-            });
-          }
-        } else {
-          setMessages((m) => [
-            ...m,
-            { from: "bot", text: "¿De qué paciente querés ver los turnos? (nombre o ID)" },
-          ]);
-          setEstado("verTurnosOtro");
-        }
-      } else if (texto.includes("nuevo")) {
-        if (usuario.rol === "usuario") {
-          setMessages((m) => [
-            ...m,
-            { from: "bot", text: "Perfecto 👍 ¿Con qué profesional querés sacar turno?" },
-          ]);
-          setEstado("eligeProfesional");
-        } else {
-          setMessages((m) => [
-            ...m,
-            { from: "bot", text: "¿Para qué paciente querés sacar el turno? (nombre o ID)" },
-          ]);
-          setEstado("eligePaciente");
-        }
-      }
-    }
-
-    // --- VER TURNOS DE OTRO PACIENTE ---
-    else if (estado === "verTurnosOtro") {
-      const paciente = pacientes.find(
-        (p) => p.nombre.toLowerCase().includes(texto) || p.id.toString() === texto
-      );
-      if (paciente) {
-        const turnosPaciente = turnos.filter((t) => t.pacienteId === paciente.id);
-        if (turnosPaciente.length === 0) {
-            setMessages((m) => [...m, { from: "bot", text: `${paciente.nombre} no tiene turnos.` }]);
-        } else {
-          const profesional = profesionales.find(
-            (p) => p.id.toString() === turnosPaciente.profesionalId
-          )
-          turnosPaciente.forEach((t) => {
-            setMessages((m) => [
-              ...m,
-              { from: "bot", text: `📅 ${t.fecha} a las ${t.hora} con ${profesional}` },
-            ]);
-          });
-        }
-        setEstado(null);
-      } else {
-        setMessages((m) => [...m, { from: "bot", text: "No encontré ese paciente." }]);
-      }
-    }
-
-    // --- ELEGIR PACIENTE (ASISTENTE/ADMIN) ---
-    else if (estado === "eligePaciente") {
-      const paciente = pacientes.find(
-        (p) => p.nombre.toLowerCase().includes(texto) || p.id.toString() === texto
-      );
-      if (paciente) {
-        setTempData({ ...tempData, pacienteId: paciente.id });
-        setMessages((m) => [
-          ...m,
-          { from: "bot", text: `Paciente: ${paciente.nombre}. ¿Con qué profesional?` },
-        ]);
+        setMessages((m) => [...m, { from: "bot", text: "\n¿Deseas sacar un turno? Escribe 2️⃣" }]);
+      } else if (texto === "2") {
+        setMessages((m) => [...m, { from: "bot", text: "Perfecto! 👍 Vamos a sacar un turno.\n\nEscribe el nombre del profesional con quien deseas el turno:" }]);
         setEstado("eligeProfesional");
+      } else if (texto === "3") {
+        setMessages((m) => [...m, {
+          from: "bot",
+          text: "ℹ️ Puedo ayudarte a:\n\n1️⃣ Ver los profesionales disponibles\n2️⃣ Sacar un turno nuevo\n\nEscribe el número de la opción que necesites."
+        }]);
       } else {
-        setMessages((m) => [
-          ...m,
-          { from: "bot", text: "No encontré ese paciente. Probá con otro nombre o ID." },
-        ]);
+        setMessages((m) => [...m, {
+          from: "bot",
+          text: "❌ Opción incorrecta. Por favor selecciona:\n\n1️⃣ Ver profesionales\n2️⃣ Sacar turno\n3️⃣ Ayuda"
+        }]);
       }
     }
 
     // --- ELEGIR PROFESIONAL ---
     else if (estado === "eligeProfesional") {
-      const profesional = profesionales.find((p) => p.nombre.toLowerCase().includes(texto));
+      const profesional = profesionales.find((p) =>
+        p.nombre.toLowerCase().includes(texto.toLowerCase())
+      );
       if (profesional) {
-        setTempData({ ...tempData, profesional: profesional.id });
-        setMessages((m) => [
-          ...m,
-          { from: "bot", text: `Elegiste ${profesional.nombre}. ¿Qué fecha querés? (AAAA-MM-DD)` },
-        ]);
+        setTempData({ ...tempData, profesional: profesional.idProfesional || profesional.id });
+        setMessages((m) => [...m, {
+          from: "bot",
+          text: `Elegiste a ${profesional.nombre} ✅\n\n¿Qué fecha deseas? (formato: AAAA-MM-DD, ejemplo: 2025-12-15)`
+        }]);
         setEstado("eligeFecha");
       } else {
-        setMessages((m) => [...m, { from: "bot", text: "No encontré ese profesional." }]);
+        setMessages((m) => [...m, {
+          from: "bot",
+          text: "❌ No encontré ese profesional. Por favor intenta nuevamente con el nombre completo o parte del nombre."
+        }]);
       }
     }
 
     // --- FECHA ---
     else if (estado === "eligeFecha") {
+      // Validar formato de fecha
+      const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!fechaRegex.test(texto)) {
+        setMessages((m) => [...m, {
+          from: "bot",
+          text: "❌ Formato de fecha incorrecto. Usa el formato AAAA-MM-DD (ejemplo: 2025-12-15)"
+        }]);
+        return;
+      }
+
       setTempData({ ...tempData, fecha: texto });
-      setMessages((m) => [...m, { from: "bot", text: "¿A qué hora? (ej: 09:00)" }]);
+      setMessages((m) => [...m, {
+        from: "bot",
+        text: `Fecha: ${texto} ✅\n\n¿A qué hora? (formato: HH:MM, ejemplo: 09:00)`
+      }]);
       setEstado("eligeHora");
     }
 
     // --- HORA ---
     else if (estado === "eligeHora") {
-      const nuevoTurno = {
-        id: turnos.length + 1,
-        pacienteId: usuario.rol === "usuario" ? usuario.id : tempData.pacienteId,
-        profesionalId: tempData.profesional,
-        fecha: tempData.fecha,
-        hora: texto,
-        especialidad: "General",
-        sede: "Central",
-      };
-      setTurnos([...turnos, nuevoTurno]);
-      setMessages((m) => [
-        ...m,
-        {
+      // Validar formato de hora
+      const horaRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      if (!horaRegex.test(texto)) {
+        setMessages((m) => [...m, {
           from: "bot",
-          text: `✅ Turno agendado con ${tempData.profesional} el ${tempData.fecha} a las ${texto}`,
-        },
-      ]);
+          text: "❌ Formato de hora incorrecto. Usa el formato HH:MM (ejemplo: 09:00)"
+        }]);
+        return;
+      }
+
+      const fechaHoraInicio = `${tempData.fecha}T${texto}:00`;
+      const [hora, minutos] = texto.split(":");
+      const horaFin = `${String(Number(hora) + 1).padStart(2, "0")}:${minutos}`;
+      const fechaHoraFin = `${tempData.fecha}T${horaFin}:00`;
+
+      const nuevoTurno = {
+        idPaciente: usuario.id,
+        idProfesional: tempData.profesional,
+        fechaHoraInicio,
+        fechaHoraFin,
+      };
+
+      crearTurno(nuevoTurno)
+        .then(() => {
+          setMessages((m) => [...m, {
+            from: "bot",
+            text: `✅ ¡Turno agendado exitosamente!\n\nFecha: ${tempData.fecha}\nHora: ${texto}\n\n¿Necesitas algo más?\n\n1️⃣ Ver profesionales\n2️⃣ Sacar otro turno\n3️⃣ Ayuda`
+          }]);
+        })
+        .catch((err) => {
+          setMessages((m) => [...m, {
+            from: "bot",
+            text: `❌ Error al agendar turno: ${err.message || "Intenta nuevamente"}`
+          }]);
+        });
+
       setEstado(null);
       setTempData({});
     }
   };
 
+  // Solo mostrar para usuarios (pacientes)
+  if (usuario?.rol !== "usuario") {
+    return null;
+  }
+
   return (
     <div style={styles.container}>
       {isOpen && (
         <div style={styles.chatBox}>
-          <div style={styles.header}>Asistente Virtual</div>
+          <div style={styles.header}>
+            Asistente Virtual 🤖
+            <button
+              onClick={toggleChat}
+              style={styles.closeButton}
+            >
+              ✕
+            </button>
+          </div>
           <div style={styles.messages}>
             {messages.map((m, i) => (
               <div
@@ -199,7 +171,7 @@ export default function AsistenteVirtual() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Escribí un mensaje..."
+              placeholder="Escribe un mensaje..."
             />
             <button style={styles.sendButton} onClick={handleSend}>
               Enviar
@@ -207,7 +179,9 @@ export default function AsistenteVirtual() {
           </div>
         </div>
       )}
-      <button style={styles.toggleButton} onClick={toggleChat}>💬</button>
+      <button style={styles.toggleButton} onClick={toggleChat}>
+        💬
+      </button>
     </div>
   );
 }
@@ -231,8 +205,8 @@ const styles = {
     boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
   },
   chatBox: {
-    width: "320px",
-    height: "420px",
+    width: "350px",
+    height: "500px",
     backgroundColor: "white",
     borderRadius: "10px",
     boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
@@ -247,6 +221,16 @@ const styles = {
     textAlign: "center",
     padding: "10px",
     fontWeight: "bold",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  closeButton: {
+    background: "none",
+    border: "none",
+    color: "white",
+    fontSize: "20px",
+    cursor: "pointer",
   },
   messages: {
     flex: 1,
@@ -261,6 +245,7 @@ const styles = {
     borderRadius: "15px",
     maxWidth: "80%",
     whiteSpace: "pre-wrap",
+    fontSize: "14px",
   },
   inputBox: {
     display: "flex",

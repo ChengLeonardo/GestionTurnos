@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/Auth/useAuth";
 
 
 const navStyle = {
@@ -40,18 +40,31 @@ export default function Navbar() {
     <nav style={navStyle}>
       <div style={{ display: "flex", gap: "15px" }}>
         <Link style={linkStyle} to="/dashboard">Dashboard</Link>
-        {usuario?.rol !== "usuario"  && (
+
+        {/* Pacientes - Asistente y Admin */}
+        {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
           <Link style={linkStyle} to="/pacientes">Pacientes</Link>
         )}
+
+        {/* Turnos - Asistente y Admin */}
         {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
           <Link style={linkStyle} to="/turnos">Turnos</Link>
         )}
+
+        {/* Reportes - Asistente y Admin */}
+        {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
+          <Link style={linkStyle} to="/reportes">Reportes</Link>
+        )}
+
+        {/* Solo Admin */}
         {usuario?.rol === "admin" && (
           <>
             <Link style={linkStyle} to="/sedes">Sedes</Link>
             <Link style={linkStyle} to="/especialidades">Especialidades</Link>
             <Link style={linkStyle} to="/profesionales">Profesionales</Link>
-            <Link style={linkStyle} to="/reportes">Reportes</Link>
+            <Link style={linkStyle} to="/usuarios">Usuarios</Link>
+            <Link style={linkStyle} to="/roles">Roles</Link>
+            <Link style={linkStyle} to="/auditoria">Auditoría</Link>
           </>
         )}
       </div>

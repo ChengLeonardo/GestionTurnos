@@ -47,11 +47,11 @@ CREATE TABLE Turno (
 
 CREATE TABLE Orden (
     Id INT AUTO_INCREMENT PRIMARY KEY,
-    PacienteId INT NOT NULL,
+    IdPaciente INT NOT NULL,
     Practica VARCHAR(100) NOT NULL,
     Autorizada BOOLEAN DEFAULT FALSE,
     FechaSubida DATETIME DEFAULT CURRENT_TIMESTAMP,
     DerivadaAProfesionalId INT,
-    FOREIGN KEY (PacienteId) REFERENCES Paciente(IdPaciente),
+    FOREIGN KEY (IdPaciente) REFERENCES Paciente(IdPaciente),
     FOREIGN KEY (DerivadaAProfesionalId) REFERENCES Profesional(IdProfesional)
 );

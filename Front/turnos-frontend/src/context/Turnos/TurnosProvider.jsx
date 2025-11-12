@@ -1,3 +1,10 @@
+import { createContext, useState, useEffect } from "react";
+import * as TurnosService from "../../api/turnosService";
+import * as EspecialidadesService from "../../api/especialidadesService";
+import * as PacientesService from "../../api/pacientesService";
+import * as ProfesionalesService from "../../api/profesionalesService";
+import * as SedesService from "../../api/sedesService";
+import { TurnosContext } from "./TurnosContext";
 
 export function TurnosProvider({ children }) {
   const [pacientes, setPacientes] = useState([]);
@@ -105,27 +112,27 @@ export function TurnosProvider({ children }) {
   // ───────────────────────────────
   async function eliminarTurno(id) {
     await TurnosService.eliminarTurno(id);
-    setTurnos((prev) => prev.filter((t) => t.id !== id));
+    setTurnos((prev) => prev.filter((t) => t.idTurno !== id));
   }
 
   async function eliminarPaciente(id) {
     await PacientesService.eliminarPaciente(id);
-    setPacientes((prev) => prev.filter((p) => p.id !== id));
+    setPacientes((prev) => prev.filter((p) => p.idPaciente !== id));
   }
 
   async function eliminarProfesional(id) {
     await ProfesionalesService.eliminarProfesional(id);
-    setProfesionales((prev) => prev.filter((p) => p.id !== id));
+    setProfesionales((prev) => prev.filter((p) => p.idProfesional !== id));
   }
 
   async function eliminarSede(id) {
     await SedesService.eliminarSede(id);
-    setSedes((prev) => prev.filter((s) => s.id !== id));
+    setSedes((prev) => prev.filter((s) => s.idSede !== id));
   }
 
   async function eliminarEspecialidad(id) {
     await EspecialidadesService.eliminarEspecialidad(id);
-    setEspecialidades((prev) => prev.filter((e) => e.id !== id));
+    setEspecialidades((prev) => prev.filter((e) => e.idEspecialidad !== id));
   }
 
   async function editarPaciente(id, paciente) {
@@ -142,17 +149,24 @@ export function TurnosProvider({ children }) {
     );
   }
 
-    async function editarProfesional(id, profesional) {
-    const actualizada = await ProfesionalesService.editarProfesional(profesional);
+  async function editarProfesional(id, profesional) {
+    const actualizada = await ProfesionalesService.editarProfesional(id, profesional);
     setProfesionales((prev) =>
       prev.map((p) => (p.idProfesional === id ? actualizada : p))
     );
   }
 
-    async function editarEspecialidad(id, especialidad) {
+  async function editarEspecialidad(id, especialidad) {
     const actualizada = await EspecialidadesService.editarEspecialidad(id, especialidad);
     setEspecialidades((prev) =>
       prev.map((e) => (e.idEspecialidad === id ? actualizada : e))
+    );
+  }
+
+  async function editarTurno(id, turno) {
+    const actualizado = await TurnosService.editarTurno(id, turno);
+    setTurnos((prev) =>
+      prev.map((t) => (t.idTurno === id || t.id === id ? actualizado : t))
     );
   }
   // ───────────────────────────────
@@ -186,6 +200,7 @@ export function TurnosProvider({ children }) {
         editarSede,
         editarProfesional,
         editarEspecialidad,
+        editarTurno,
       }}
     >
       {children}

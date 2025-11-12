@@ -7,10 +7,13 @@ import Turnos from "./pages/Turnos";
 import Pacientes from "./pages/Pacientes";
 import Profesionales from "./pages/Profesionales";
 import Reportes from "./pages/Reportes";
-import { AuthContext, useAuth } from "./context/AuthContext";
+import { useAuth } from "./context/Auth/useAuth";
 import AsistenteVirtual from "./components/AsistenteVirtual";
 import Sedes from "./pages/Sedes";
 import Especialidades from "./pages/Especialidades";
+import Usuarios from "./pages/Usuarios";
+import Roles from "./pages/Roles";
+import Auditoria from "./pages/Auditoria";
 
 // 🔒 Componente de ruta privada
 function PrivateRoute({ children }) {
@@ -97,6 +100,30 @@ export default function App() {
           element={
             <PrivateRoute>
               <Especialidades />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/usuarios"
+          element={
+            <PrivateRoute>
+              <Usuarios />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/roles"
+          element={
+            <PrivateRoute>
+              <Roles />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/auditoria"
+          element={
+            <PrivateRoute>
+              <Auditoria />
             </PrivateRoute>
           }
         />
