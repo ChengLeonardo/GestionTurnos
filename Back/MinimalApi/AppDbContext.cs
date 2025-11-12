@@ -20,10 +20,16 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Turno>()
             .Property(t => t.Estado) 
             .HasConversion<string>()  
-            .HasMaxLength(20);       
+            .HasMaxLength(20);
 
         modelBuilder.Entity<Turno>()
             .Property(t => t.RowVersion) // Configuración para RowVersion
             .IsRowVersion(); // (control de concurrencia)
+            
+        modelBuilder.Entity<Usuario>()
+            .HasOne(u => u.Rol)
+            .WithMany(r => r.Usuarios)
+            .HasForeignKey(u => u.RolId);
+
     }
 }

@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Biblioteca;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +14,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins("http://localhost:5173") // tu app React
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+                .AllowAnyHeader()
+                .AllowAnyMethod();
         });
 });
 
@@ -35,10 +39,43 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddScoped<Pass>();
+builder.Services.AddControllers();
+
+
+var jwtKey = "ClaveSuperSecretaParaGestionTurnos123!"; 
+builder.Configuration["Jwt:Key"] = jwtKey;
+builder.Configuration["Jwt:Issuer"] = "GestionTurnosAPI";
+builder.Configuration["Jwt:Audience"] = "GestionTurnosClient";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "GestionTurnosAPI",
+            ValidAudience = "GestionTurnosClient",
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes("ClaveSuperSecretaParaGestionTurnos123!")
+            )
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+
 var app = builder.Build();
 
 app.UseCors("AllowReactApp");
 
+app.MapControllers();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseStaticFiles();
 
@@ -107,12 +144,14 @@ app.MapGet("/profesionales/{id}", async (int id, AppDbContext db) =>
     return prof is not null ? Results.Ok(prof) : Results.NotFound("Profesional no encontrado");
 });
 
+
 app.MapPost("/profesionales", async (Profesional prof, AppDbContext db) =>
 {
     db.Profesionales.Add(prof);
     await db.SaveChangesAsync();
     return Results.Created($"/profesionales/{prof.IdProfesional}", prof);
-});
+})
+.RequireAuthorization(policy => policy.RequireRole("Admin"));
 
 app.MapPut("/profesionales/{id}", async (int id, Profesional data, AppDbContext db) =>
 {
@@ -199,7 +238,9 @@ app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
     db.Turnos.Add(turno);
     await db.SaveChangesAsync();
     return Results.Created($"/turnos/{turno.IdTurno}", turno);
-});
+})
+.RequireAuthorization(policy => policy.RequireRole("Paciente"));
+
 
 app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
 {

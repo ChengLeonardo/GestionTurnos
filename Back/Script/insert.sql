@@ -31,3 +31,13 @@ VALUES ('2025-10-02 09:00:00', '2025-10-02 09:30:00', 1, 1, 1, 1, 1, '01'),
 INSERT INTO ordenes (PacienteId, Practica, Autorizada, FechaSubida)
 VALUES (1, 'Kinesiologia', TRUE, NOW()),
         (2, 'Cardiologia', FALSE, NOW());
+
+
+-- Insertar Roles
+INSERT INTO rols (Nombre) VALUES 
+('Administrador'),
+('Profesional'),
+('Recepcion'),
+('Paciente');
+
+-- dotnet ef database update desde MinimalApi
