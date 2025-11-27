@@ -135,7 +135,17 @@ app.MapGet("/pacientes/{id}", async (int id, AppDbContext db) =>
 
 app.MapPost("/pacientes", async (Paciente paciente, AppDbContext db) =>
 {
+    var usuario = new Usuario
+    {
+        Nombre = paciente.Nombre,
+        Email = paciente.Email.ToString(),
+        RolId = 3,
+        PasswordHash = "9250E222C4C71F0C58D4C54B50A880A312E9F9FED55D5C3AA0B0E860DED99165",
+        Paciente = paciente
+    };
     db.Pacientes.Add(paciente);
+    await db.SaveChangesAsync();
+    db.Usuarios.Add(usuario);
     await db.SaveChangesAsync();
     return Results.Created($"/pacientes/{paciente.IdPaciente}", paciente);
 });

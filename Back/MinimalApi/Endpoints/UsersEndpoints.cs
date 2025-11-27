@@ -56,17 +56,36 @@ public static class UsersEndpoints
                 PasswordHash = passService.HashPassword(dto.Password),
                 RolId = dto.RolId
             };
+            if (user.RolId == 3)
+            {
+                var paciente = new Paciente
+                {
+                    Nombre = dto.Nombre,
+                    Dni = "11111111",
+                    Telefono = "1111111",
+                    Email = dto.Email
+                };
 
-            db.Usuarios.Add(user);
-            await db.SaveChangesAsync();
+                db.Usuarios.Add(user);
+                await db.SaveChangesAsync();
+                user.Paciente = paciente;
+                db.Pacientes.Add(paciente);
+                await db.SaveChangesAsync();
+
+            }
+            else
+            {
+                db.Usuarios.Add(user);
+                await db.SaveChangesAsync();
+            }
 
             return Results.Created($"/api/users/{user.IdUsuario}", new UserDto
-            {
-                Id = user.IdUsuario,
-                Nombre = user.Nombre,
-                Email = user.Email,
-                RolId = user.RolId
-            });
+                {
+                    Id = user.IdUsuario,
+                    Nombre = user.Nombre,
+                    Email = user.Email,
+                    RolId = user.RolId
+                });
         });
 
         group.MapPut("/{id}", async (int id, UpdateUserDto dto, AppDbContext db) =>
