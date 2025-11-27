@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     const decoded = jwtDecode(token);
     return {
       nombre: decoded.name,
+      idPaciente: decoded.idPaciente,
       id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"],
       rol: decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]?.toLowerCase()
     };

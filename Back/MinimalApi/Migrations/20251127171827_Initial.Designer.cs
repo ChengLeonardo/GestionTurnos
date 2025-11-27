@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MinimalApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251127143110_AgregarCampoUsadaAOrden")]
-    partial class AgregarCampoUsadaAOrden
+    [Migration("20251127171827_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -95,7 +95,9 @@ namespace MinimalApi.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<bool>("Usada")
-                        .HasColumnType("tinyint(1)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
 
                     b.HasKey("Id");
 
@@ -239,8 +241,14 @@ namespace MinimalApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("IdPaciente")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nombre")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("PacienteIdPaciente")
+                        .HasColumnType("int");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
@@ -249,6 +257,8 @@ namespace MinimalApi.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("IdUsuario");
+
+                    b.HasIndex("PacienteIdPaciente");
 
                     b.HasIndex("RolId");
 
@@ -310,11 +320,17 @@ namespace MinimalApi.Migrations
 
             modelBuilder.Entity("Biblioteca.Usuario", b =>
                 {
+                    b.HasOne("Biblioteca.Paciente", "Paciente")
+                        .WithMany()
+                        .HasForeignKey("PacienteIdPaciente");
+
                     b.HasOne("Biblioteca.Rol", "Rol")
                         .WithMany("Usuarios")
                         .HasForeignKey("RolId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Paciente");
 
                     b.Navigation("Rol");
                 });

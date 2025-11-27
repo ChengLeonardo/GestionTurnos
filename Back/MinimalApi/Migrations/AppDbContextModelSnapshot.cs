@@ -92,7 +92,9 @@ namespace MinimalApi.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<bool>("Usada")
-                        .HasColumnType("tinyint(1)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
 
                     b.HasKey("Id");
 
@@ -236,8 +238,14 @@ namespace MinimalApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("IdPaciente")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nombre")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("PacienteIdPaciente")
+                        .HasColumnType("int");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
@@ -246,6 +254,8 @@ namespace MinimalApi.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("IdUsuario");
+
+                    b.HasIndex("PacienteIdPaciente");
 
                     b.HasIndex("RolId");
 
@@ -307,11 +317,17 @@ namespace MinimalApi.Migrations
 
             modelBuilder.Entity("Biblioteca.Usuario", b =>
                 {
+                    b.HasOne("Biblioteca.Paciente", "Paciente")
+                        .WithMany()
+                        .HasForeignKey("PacienteIdPaciente");
+
                     b.HasOne("Biblioteca.Rol", "Rol")
                         .WithMany("Usuarios")
                         .HasForeignKey("RolId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Paciente");
 
                     b.Navigation("Rol");
                 });

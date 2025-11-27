@@ -16,6 +16,28 @@ namespace MinimalApi.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "AuditLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Usuario = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Accion = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Endpoint = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    FechaHora = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Detalles = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Especialidades",
                 columns: table => new
                 {
@@ -95,11 +117,18 @@ namespace MinimalApi.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     PasswordHash = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    RolId = table.Column<int>(type: "int", nullable: false)
+                    RolId = table.Column<int>(type: "int", nullable: false),
+                    PacienteIdPaciente = table.Column<int>(type: "int", nullable: true),
+                    IdPaciente = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Usuarios", x => x.IdUsuario);
+                    table.ForeignKey(
+                        name: "FK_Usuarios_Pacientes_PacienteIdPaciente",
+                        column: x => x.PacienteIdPaciente,
+                        principalTable: "Pacientes",
+                        principalColumn: "IdPaciente");
                     table.ForeignKey(
                         name: "FK_Usuarios_Rols_RolId",
                         column: x => x.RolId,
@@ -148,6 +177,7 @@ namespace MinimalApi.Migrations
                     Practica = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Autorizada = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Usada = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
                     FechaSubida = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     DerivadaAProfesionalId = table.Column<int>(type: "int", nullable: true)
                 },
@@ -229,6 +259,11 @@ namespace MinimalApi.Migrations
                 column: "IdProfesional");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Usuarios_PacienteIdPaciente",
+                table: "Usuarios",
+                column: "PacienteIdPaciente");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Usuarios_RolId",
                 table: "Usuarios",
                 column: "RolId");
@@ -237,6 +272,9 @@ namespace MinimalApi.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AuditLogs");
+
             migrationBuilder.DropTable(
                 name: "Ordenes");
 
@@ -247,10 +285,10 @@ namespace MinimalApi.Migrations
                 name: "Usuarios");
 
             migrationBuilder.DropTable(
-                name: "Pacientes");
+                name: "Profesionales");
 
             migrationBuilder.DropTable(
-                name: "Profesionales");
+                name: "Pacientes");
 
             migrationBuilder.DropTable(
                 name: "Rols");

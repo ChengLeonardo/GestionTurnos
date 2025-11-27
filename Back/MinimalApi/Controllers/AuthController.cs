@@ -73,9 +73,10 @@ public class AuthController : ControllerBase
         var jwtSettings = config.GetSection("Jwt");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
+        Console.WriteLine(usuario.Nombre);
         var claims = new[]
         {
+            new Claim("idPaciente", usuario.IdPaciente.ToString()),
             new Claim(ClaimTypes.Name, usuario.Nombre),
             new Claim(ClaimTypes.Role, usuario.Rol.Nombre),
             new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()),

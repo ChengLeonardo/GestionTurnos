@@ -15,4 +15,6 @@ public class Usuario
     public string? PasswordHash { get; set; } 
     public int RolId { get; set; } 
     public Rol? Rol { get; set; }
+    public Paciente? Paciente { get; set;}
+    public int? IdPaciente {get; set;}
 }

@@ -16,13 +16,13 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder); 
+        base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Turno>()
-            .Property(t => t.Estado) 
-            .HasConversion<string>()  
-            .HasMaxLength(20);    
-            
+            .Property(t => t.Estado)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
         modelBuilder.Entity<Turno>()
             .HasOne(t => t.Profesional)
             .WithMany(p => p.Turnos)
@@ -61,5 +61,9 @@ public class AppDbContext : DbContext
             .HasOne(o => o.DerivadaAProfesional)
             .WithMany(p => p.Ordenes)
             .HasForeignKey(o => o.DerivadaAProfesionalId);
+
+        modelBuilder.Entity<Orden>()
+            .Property(o => o.Usada)
+            .HasDefaultValue(false);
     }
 }

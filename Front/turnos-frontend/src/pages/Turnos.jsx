@@ -29,7 +29,7 @@ export default function Turnos() {
     if (usuario.rol === "admin" || usuario.rol === "asistente") {
       return turnos;
     }
-    return turnos.filter((t) => Number(t.idPaciente ?? t.IdPaciente) === Number(usuario.id));
+    return turnos.filter((t) => Number(t.idPaciente ?? t.IdPaciente) === Number(usuario.idPaciente));
   }, [turnos, usuario]);
 
   const handleChange = (e) => {
@@ -73,7 +73,7 @@ export default function Turnos() {
 
     // Si es usuario normal, forzamos su propio IdPaciente
     const idPacienteFinal =
-      usuario?.rol === "usuario" ? Number(usuario.id) : Number(form.idPaciente);
+      usuario?.rol === "usuario" ? Number(usuario.idPaciente) : Number(form.idPaciente);
 
     const payload = {
       idPaciente: idPacienteFinal,
@@ -145,7 +145,7 @@ export default function Turnos() {
   };
 
   const handleSubirOrden = async () => {
-    const idPaciente = usuario?.rol === "usuario" ? usuario.id : form.idPaciente;
+    const idPaciente = usuario?.rol === "usuario" ? usuario.idPaciente : form.idPaciente;
     if (!idPaciente) {
       alert("Seleccione un paciente primero");
       return;
