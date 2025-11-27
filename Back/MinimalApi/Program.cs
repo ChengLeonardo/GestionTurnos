@@ -17,8 +17,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins("http://localhost:5173") // tu app React
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+                .AllowAnyHeader()
+                .AllowAnyMethod();
         });
 });
 
@@ -87,6 +87,10 @@ app.Use(async (context, next) =>
 
 app.UseCors("AllowReactApp");
 
+app.MapControllers();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseStaticFiles();
 
@@ -163,6 +167,7 @@ app.MapGet("/profesionales/{id}", async (int id, AppDbContext db) =>
     var prof = await db.Profesionales.Where(p => p.IdProfesional == id).FirstOrDefaultAsync();
     return prof is not null ? Results.Ok(prof) : Results.NotFound("Profesional no encontrado");
 });
+
 
 app.MapPost("/profesionales", async (Profesional prof, AppDbContext db) =>
 {
@@ -313,7 +318,9 @@ app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
     db.Turnos.Add(turno);
     await db.SaveChangesAsync();
     return Results.Created($"/turnos/{turno.IdTurno}", turno);
-});
+})
+.RequireAuthorization(policy => policy.RequireRole("Paciente"));
+
 
 app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
 {
