@@ -28,9 +28,9 @@ VALUES ('2025-10-02 09:00:00', '2025-10-02 09:30:00', 1, 1, 'Solicitado'),
        ('2025-10-02 10:00:00', '2025-10-02 10:30:00', 2, 2, 'Confirmado');
 
 -- Insertar órdenes
-INSERT INTO ordenes (IdPaciente, Practica, Autorizada, FechaSubida)
-VALUES (1, 'Kinesiologia', TRUE, NOW()),
-       (2, 'Cardiologia', FALSE, NOW());
+INSERT INTO ordenes (IdPaciente, Practica, Autorizada, FechaSubida, Usada)
+VALUES (1, 'Kinesiologia', TRUE, NOW(), true),
+       (2, 'Cardiologia', true, NOW(), true);
 
 -- Insertar roles (Admin, Asistente, Usuario)
 INSERT INTO rols(Nombre)

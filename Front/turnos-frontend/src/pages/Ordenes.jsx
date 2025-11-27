@@ -167,7 +167,6 @@ export default function Ordenes() {
                         <th style={thStyle}>Práctica</th>
                         <th style={thStyle}>Fecha Subida</th>
                         <th style={thStyle}>Estado</th>
-                        <th style={thStyle}>Derivado a</th>
                         <th style={thStyle}>Acciones</th>
                     </tr>
                 </thead>
@@ -190,7 +189,6 @@ export default function Ordenes() {
                                     <span style={badgeWarning}>Pendiente</span>
                                 )}
                             </td>
-                            <td style={tdStyle}>{o.derivadaAProfesionalNombre || "-"}</td>
                             <td style={tdStyle}>
                                 {(usuario?.rol === "admin" || usuario?.rol === "asistente") && !o.autorizada && !o.usada && (
                                     <button style={btnSuccessStyle} onClick={() => handleAutorizar(o)} title="Autorizar">
