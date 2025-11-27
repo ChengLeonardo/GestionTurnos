@@ -1,7 +1,9 @@
 import { useContext, useState } from "react";
 import { TurnosContext } from "../context/Turnos/TurnosContext";
+import { useAuth } from "../context/Auth/useAuth";
 
 export default function Sedes() {
+  const { usuario } = useAuth();
   const { sedes, crearSede, editarSede, eliminarSede, loading } = useContext(TurnosContext);
 
   const [form, setForm] = useState({ nombre: "", direccion: "" });
@@ -43,41 +45,44 @@ export default function Sedes() {
       <h1>Gestión de Sedes</h1>
 
       {/* Formulario */}
-      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre"
-          value={form.nombre}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <input
-          type="text"
-          name="direccion"
-          placeholder="Dirección"
-          value={form.direccion}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <button type="submit" style={btnStyle}>
-          {editandoId ? "Actualizar" : "Crear"}
-        </button>
-        {editandoId && (
-          <button
-            type="button"
-            style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-            onClick={() => {
-              setEditandoId(null);
-              setForm({ nombre: "", direccion: "" });
-            }}
-          >
-            Cancelar
+      {/* Formulario solo para Admin */}
+      {usuario?.rol === "admin" && (
+        <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+          <input
+            type="text"
+            name="nombre"
+            placeholder="Nombre"
+            value={form.nombre}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="text"
+            name="direccion"
+            placeholder="Dirección"
+            value={form.direccion}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <button type="submit" style={btnStyle}>
+            {editandoId ? "Actualizar" : "Crear"}
           </button>
-        )}
-      </form>
+          {editandoId && (
+            <button
+              type="button"
+              style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+              onClick={() => {
+                setEditandoId(null);
+                setForm({ nombre: "", direccion: "" });
+              }}
+            >
+              Cancelar
+            </button>
+          )}
+        </form>
+      )}
 
       {/* Tabla */}
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -85,7 +90,7 @@ export default function Sedes() {
           <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
             <th style={thStyle}>Nombre</th>
             <th style={thStyle}>Dirección</th>
-            <th style={thStyle}>Acciones</th>
+            {usuario?.rol === "admin" && <th style={thStyle}>Acciones</th>}
           </tr>
         </thead>
         <tbody>
@@ -94,15 +99,19 @@ export default function Sedes() {
               <td>{s.nombre}</td>
               <td>{s.direccion}</td>
               <td>
-                <button style={btnStyle} onClick={() => handleEditar(s)}>
-                  Editar
-                </button>{" "}
-                <button
-                  style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-                  onClick={() => handleEliminar(s.idSede)}
-                >
-                  Eliminar
-                </button>
+                {usuario?.rol === "admin" && (
+                  <>
+                    <button style={btnStyle} onClick={() => handleEditar(s)}>
+                      Editar
+                    </button>{" "}
+                    <button
+                      style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+                      onClick={() => handleEliminar(s.idSede)}
+                    >
+                      Eliminar
+                    </button>
+                  </>
+                )}
               </td>
             </tr>
           ))}

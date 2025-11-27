@@ -18,7 +18,8 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins("http://localhost:5173") // tu app React
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                .AllowCredentials();
         });
 });
 
@@ -64,37 +65,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-
 var app = builder.Build();
 
-app.MapControllers();
-app.MapUsersEndpoints();
-app.MapRolesEndpoints();
-app.MapOrdenesEndpoints();
-app.MapAuditEndpoints();
-app.UseAuditLog();
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.Use(async (context, next) =>
-{
-    // fuerza autenticación global, excepto login o rutas públicas
-    if (context.Request.Path.StartsWithSegments("/api//login"))
-        await next();
-    else
-        await next();
-});
-
-app.UseCors("AllowReactApp");
-
-app.MapControllers();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseStaticFiles();
-
-// Activar Swagger
+// HABILITAR SWAGGER ANTES DE TODO (OPCIONAL PERO ORDENADO)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -102,8 +75,53 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Endpoint raíz opcional para probar
+// CORS – antes de controllers
+app.UseCors("AllowReactApp");
+
+// Archivos estáticos si los necesitás
+app.UseStaticFiles();
+
+// 🔐 AUTENTICACIÓN Y AUTORIZACIÓN (ORDEN CORRECTO)
+app.UseAuthentication();
+app.UseAuthorization();
+
+// 🧾 TU MIDDLEWARE DE AUDITORÍA (DESPUÉS DE AUTH/ROLE)
+app.UseAuditLog();
+
+// Middleware opcional para “excepciones” de autenticación global
+// Si quisieras permitir login sin token, se haría acá PERO BIEN ESCRITO:
+app.Use(async (context, next) =>
+{
+    // Dejar pasar sin token solo /api/auth/login y tal vez /swagger, etc.
+    var path = context.Request.Path.Value?.ToLower() ?? "";
+
+    if (path.StartsWith("/api/auth/login") ||
+        path.StartsWith("/swagger") ||
+        path == "/")
+    {
+        await next();
+        return;
+    }
+
+    // En la práctica, la autorización la manejan [Authorize] y las policies,
+    // así que este middleware podría NO hacer nada y lo quitamos si no ayuda.
+
+    await next();
+});
+
+// ENDPOINT RAÍZ OPCIONAL
 app.MapGet("/", (Pass pass) => Results.Ok("API Gestión de Turnos funcionando ✅"));
+
+// ⬇️⬇️ Mapeo de endpoints de controladores y endpoints minimal API ⬇️⬇️
+
+// Controllers (AuthController, etc.)
+app.MapControllers();
+
+// Endpoints de extensión
+app.MapUsersEndpoints();
+app.MapRolesEndpoints();
+app.MapOrdenesEndpoints();
+app.MapAuditEndpoints();
 
 // Pacientes
 app.MapGet("/pacientes", async (AppDbContext db) =>
@@ -168,7 +186,6 @@ app.MapGet("/profesionales/{id}", async (int id, AppDbContext db) =>
     return prof is not null ? Results.Ok(prof) : Results.NotFound("Profesional no encontrado");
 });
 
-
 app.MapPost("/profesionales", async (Profesional prof, AppDbContext db) =>
 {
     db.Profesionales.Add(prof);
@@ -223,13 +240,13 @@ app.MapDelete("/profesionales/{id}", async (int id, AppDbContext db) =>
     return Results.Ok("Profesional eliminado");
 });
 
-// Sede
+// Sedes
 app.MapGet("/sedes", async (AppDbContext db) => await db.Sedes.ToListAsync());
 app.MapPost("/sedes", async (Sede sede, AppDbContext db) =>
 {
     db.Sedes.Add(sede);
     await db.SaveChangesAsync();
-    return Results.Created($"/sedes/{sede.IdSede}", sede);  
+    return Results.Created($"/sedes/{sede.IdSede}", sede);
 });
 app.MapPut("/sedes/{id}", async (int id, Sede data, AppDbContext db) =>
 {
@@ -249,8 +266,7 @@ app.MapDelete("/sedes/{id}", async (int id, AppDbContext db) =>
     return Results.Ok("Sede eliminada");
 });
 
-// Especialidad
-
+// Especialidades
 app.MapGet("/especialidades", async (AppDbContext db) => await db.Especialidades.ToListAsync());
 app.MapPost("/especialidades", async (Especialidad esp, AppDbContext db) =>
 {
@@ -276,51 +292,75 @@ app.MapDelete("/especialidades/{id}", async (int id, AppDbContext db) =>
 });
 
 // Turnos
-
 app.MapGet("/turnos", async (AppDbContext db) =>
     await db.Turnos
-    .Include(t => t.Profesional)
-    .Include(t => t.Paciente)
-    .Select(t => new TurnoDto {
-                    Id = t.IdTurno,
+        .Include(t => t.Profesional)
+        .Include(t => t.Paciente)
+        .Include(t => t.Profesional.Sede)
+        .Include(t => t.Profesional.Especialidad)
+        .Select(t => new TurnoDto
+        {
+            IdTurno = t.IdTurno,
             FechaHoraInicio = t.FechaHoraInicio,
             FechaHoraFin = t.FechaHoraFin,
+            IdSede = t.Profesional.IdSede,
+            Sede = t.Profesional.Sede.Nombre,
+            Especialidad = t.Profesional.Especialidad.Nombre,
             ProfesionalNombre = t.Profesional.Nombre ?? "",
             PacienteNombre = t.Paciente.Nombre ?? "",
             IdPaciente = t.IdPaciente,
             IdProfesional = t.IdProfesional,
             Estado = t.Estado.ToString()
-    }).ToListAsync());
+        }).ToListAsync());
 
 app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
-{   
-    // Validation Logic for Kinesiologia
-    // Turno doesn't have IdEspecialidad directly, we need to get it from the Professional
+{
     var profesional = await db.Profesionales.FindAsync(turno.IdProfesional);
     if (profesional != null)
     {
         var especialidad = await db.Especialidades.FindAsync(profesional.IdEspecialidad);
         if (especialidad != null && especialidad.Nombre.Contains("Kinesiologia", StringComparison.OrdinalIgnoreCase))
         {
-            // Check if patient has an authorized order
             var orden = await db.Ordenes
-                .Where(o => o.IdPaciente == turno.IdPaciente && o.Practica == "Kinesiologia" && o.Autorizada)
+                .Where(o => o.IdPaciente == turno.IdPaciente && o.Practica == "Kinesiologia" && o.Autorizada && !o.Usada)
                 .OrderByDescending(o => o.FechaSubida)
                 .FirstOrDefaultAsync();
 
             if (orden == null)
             {
-                return Results.BadRequest("Se requiere una orden médica autorizada para Kinesiología.");
+                return Results.BadRequest("Se requiere una orden médica autorizada y válida (no usada) para Kinesiología.");
             }
+
+            orden.Usada = true;
+            db.Ordenes.Update(orden);
         }
     }
 
     db.Turnos.Add(turno);
     await db.SaveChangesAsync();
-    return Results.Created($"/turnos/{turno.IdTurno}", turno);
-})
-.RequireAuthorization(policy => policy.RequireRole("Paciente"));
 
+    var turnoConDatos = await db.Turnos.Where(t => t.IdTurno == turno.IdTurno)
+        .Include(t => t.Profesional)
+        .Include(t => t.Paciente)
+        .Include(t => t.Profesional.Sede)
+        .Include(t => t.Profesional.Especialidad)
+        .Select(t => new TurnoDto
+        {
+            IdTurno = t.IdTurno,
+            FechaHoraInicio = t.FechaHoraInicio,
+            FechaHoraFin = t.FechaHoraFin,
+            IdSede = t.Profesional.IdSede,
+            Sede = t.Profesional.Sede.Nombre,
+            Especialidad = t.Profesional.Especialidad.Nombre,
+            ProfesionalNombre = t.Profesional.Nombre ?? "",
+            PacienteNombre = t.Paciente.Nombre ?? "",
+            IdPaciente = t.IdPaciente,
+            IdProfesional = t.IdProfesional,
+            Estado = t.Estado.ToString()
+        }).FirstOrDefaultAsync();
+
+    return Results.Ok(turnoConDatos);
+});
 
 app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
 {
@@ -332,7 +372,28 @@ app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
     t.IdPaciente = data.IdPaciente;
     t.Estado = data.Estado;
     await db.SaveChangesAsync();
-    return Results.Ok(t);
+
+    var turnoConDatos = await db.Turnos.Where(t => t.IdTurno == id)
+        .Include(t => t.Profesional)
+        .Include(t => t.Paciente)
+        .Include(t => t.Profesional.Sede)
+        .Include(t => t.Profesional.Especialidad)
+        .Select(t => new TurnoDto
+        {
+            IdTurno = t.IdTurno,
+            FechaHoraInicio = t.FechaHoraInicio,
+            FechaHoraFin = t.FechaHoraFin,
+            IdSede = t.Profesional.IdSede,
+            Sede = t.Profesional.Sede.Nombre,
+            Especialidad = t.Profesional.Especialidad.Nombre,
+            ProfesionalNombre = t.Profesional.Nombre ?? "",
+            PacienteNombre = t.Paciente.Nombre ?? "",
+            IdPaciente = t.IdPaciente,
+            IdProfesional = t.IdProfesional,
+            Estado = t.Estado.ToString()
+        }).FirstOrDefaultAsync();
+
+    return Results.Ok(turnoConDatos);
 });
 
 app.MapDelete("/turnos/{id}", async (int id, AppDbContext db) =>
@@ -341,8 +402,8 @@ app.MapDelete("/turnos/{id}", async (int id, AppDbContext db) =>
     if (t is null) return Results.NotFound();
     db.Turnos.Remove(t);
     await db.SaveChangesAsync();
+
     return Results.Ok("Turno eliminado");
 });
-
 
 app.Run();

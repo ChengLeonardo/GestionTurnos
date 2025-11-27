@@ -112,6 +112,7 @@ export function TurnosProvider({ children }) {
   // ───────────────────────────────
   async function eliminarTurno(id) {
     await TurnosService.eliminarTurno(id);
+    console.log(turnos);
     setTurnos((prev) => prev.filter((t) => t.idTurno !== id));
   }
 

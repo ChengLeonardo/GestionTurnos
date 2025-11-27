@@ -14,6 +14,7 @@ import Especialidades from "./pages/Especialidades";
 import Usuarios from "./pages/Usuarios";
 import Roles from "./pages/Roles";
 import Auditoria from "./pages/Auditoria";
+import Ordenes from "./pages/Ordenes";
 
 // 🔒 Componente de ruta privada
 function PrivateRoute({ children }) {
@@ -124,6 +125,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <Auditoria />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ordenes"
+          element={
+            <PrivateRoute>
+              <Ordenes />
             </PrivateRoute>
           }
         />

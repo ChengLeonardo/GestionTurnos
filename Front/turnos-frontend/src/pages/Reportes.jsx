@@ -11,27 +11,27 @@ export default function Reportes() {
       case "paciente":
         return pacientes.map(p => ({
           name: p.nombre,
-          cantidad: turnos.filter(t => t.IdPaciente === p.id || t.idPaciente === p.id).length
+          cantidad: turnos.filter(t => t.idPaciente === p.idPaciente || t.idPaciente === p.idPaciente).length
         }));
       case "profesional":
         return profesionales.map(p => ({
           name: p.nombre,
-          cantidad: turnos.filter(t => t.IdProfesional === p.id || t.idProfesional === p.id).length
+          cantidad: turnos.filter(t => t.idProfesional === p.idProfesional || t.idProfesional === p.idProfesional).length
         }));
       case "sede":
         return sedes.map(s => ({
           name: s.nombre,
           cantidad: turnos.filter(t => {
-            const prof = profesionales.find(p => p.id === t.IdProfesional || p.id === t.idProfesional);
-            return prof && (prof.idSede === s.idSede || prof.IdSede === s.idSede);
+            const prof = profesionales.find(p => p.idProfesional === t.idProfesional || p.idProfesional === t.idProfesional);
+            return prof && (prof.idSede === s.idSede || prof.idSede === s.idSede);
           }).length
         }));
       case "especialidad":
         return especialidades.map(e => ({
           name: e.nombre,
           cantidad: turnos.filter(t => {
-            const prof = profesionales.find(p => p.id === t.IdProfesional || p.id === t.idProfesional);
-            return prof && (prof.idEspecialidad === e.idEspecialidad || prof.IdEspecialidad === e.idEspecialidad);
+            const prof = profesionales.find(p => p.idProfesional === t.idProfesional || p.idProfesional === t.idProfesional);
+            return prof && (prof.idEspecialidad === e.idEspecialidad || prof.idEspecialidad === e.idEspecialidad);
           }).length
         }));
       case "fecha":

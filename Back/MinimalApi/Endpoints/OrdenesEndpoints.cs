@@ -22,6 +22,7 @@ public static class OrdenesEndpoints
                     PacienteNombre = o.Paciente.Nombre ?? "Sin Nombre",
                     Practica = o.Practica ?? "",
                     Autorizada = o.Autorizada,
+                    Usada = o.Usada,
                     FechaSubida = o.FechaSubida,
                     DerivadaAProfesionalId = o.DerivadaAProfesionalId,
                     DerivadaAProfesionalNombre = o.DerivadaAProfesional != null ? o.DerivadaAProfesional.Nombre : null
@@ -46,6 +47,7 @@ public static class OrdenesEndpoints
                 PacienteNombre = orden.Paciente.Nombre ?? "Sin Nombre",
                 Practica = orden.Practica ?? "",
                 Autorizada = orden.Autorizada,
+                Usada = orden.Usada,
                 FechaSubida = orden.FechaSubida,
                 DerivadaAProfesionalId = orden.DerivadaAProfesionalId,
                 DerivadaAProfesionalNombre = orden.DerivadaAProfesional?.Nombre

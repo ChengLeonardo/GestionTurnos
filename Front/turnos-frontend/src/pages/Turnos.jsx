@@ -326,6 +326,8 @@ export default function Turnos() {
           <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
             <th style={thStyle}>Paciente</th>
             <th style={thStyle}>Profesional</th>
+            <th style={thStyle}>Sede</th>
+            <th style={thStyle}>Especialidad</th>
             <th style={thStyle}>Fecha Hora Inicio</th>
             <th style={thStyle}>Fecha Hora Fin</th>
             <th style={thStyle}>Estado</th>
@@ -354,6 +356,8 @@ export default function Turnos() {
                   {t.profesionalNombre ||
                     getProfesionalNombre(Number(idProfesional))}
                 </td>
+                <td>{t.sede}</td>
+                <td>{t.especialidad}</td>
                 <td>{t.fechaHoraInicio}</td>
                 <td>{t.fechaHoraFin}</td>
                 <td>{getEstadoTexto(t.estado)}</td>
@@ -361,11 +365,13 @@ export default function Turnos() {
                   {/* Botones para Asistente y Admin */}
                   {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
                     <>
+                      {t.estado !== "Cancelado" && t.estado !== "Completado" && (
                       <button style={btnStyle} onClick={() => handleEditar(t)}>
                         Editar
                       </button>
+                      )}
                       {" "}
-                      {t.estado === 0 && ( // Solicitado
+                      {t.estado === "Solicitado" && ( // Solicitado
                         <button
                           style={{ ...btnStyle, backgroundColor: "#28a745" }}
                           onClick={() => handleConfirmar(t)}
@@ -374,7 +380,7 @@ export default function Turnos() {
                         </button>
                       )}
                       {" "}
-                      {t.estado === 1 && ( // Confirmado
+                      {t.estado === "Confirmado" && ( // Confirmado
                         <button
                           style={{ ...btnStyle, backgroundColor: "#17a2b8" }}
                           onClick={() => handleCompletar(t)}
@@ -386,7 +392,7 @@ export default function Turnos() {
                     </>
                   )}
                   {/* Botón Cancelar para todos */}
-                  {t.estado !== 2 && t.estado !== 3 && ( // No cancelado ni completado
+                  {t.estado !== "Cancelado" && t.estado !== "Completado" && ( // No cancelado ni completado
                     <button
                       style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
                       onClick={() => handleCancelar(idTurno)}

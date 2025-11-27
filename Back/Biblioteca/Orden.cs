@@ -13,6 +13,7 @@ public class Orden
     public Paciente Paciente {get;set;}
     public string? Practica {get;set;}
     public bool Autorizada {get;set;}
+    public bool Usada {get;set;} = false;
     public DateTime FechaSubida {get;set;}
     public int? DerivadaAProfesionalId {get;set;}
     public Profesional? DerivadaAProfesional {get;set;}

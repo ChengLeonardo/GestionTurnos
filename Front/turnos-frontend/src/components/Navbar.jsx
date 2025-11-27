@@ -51,16 +51,20 @@ export default function Navbar() {
           <Link style={linkStyle} to="/turnos">Turnos</Link>
         )}
 
+        {/* Ordenes - Visible para todos (pacientes suben, admin/asistente gestionan) */}
+        <Link style={linkStyle} to="/ordenes">Órdenes</Link>
+
         {/* Reportes - Asistente y Admin */}
         {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
           <Link style={linkStyle} to="/reportes">Reportes</Link>
         )}
+        {/* Especialidades - Visible para todos */}
+        <Link style={linkStyle} to="/especialidades">Especialidades</Link>
+        {/* Sedes - Visible para todos */}
+        <Link style={linkStyle} to="/sedes">Sedes</Link>
 
-        {/* Solo Admin */}
         {usuario?.rol === "admin" && (
           <>
-            <Link style={linkStyle} to="/sedes">Sedes</Link>
-            <Link style={linkStyle} to="/especialidades">Especialidades</Link>
             <Link style={linkStyle} to="/profesionales">Profesionales</Link>
             <Link style={linkStyle} to="/usuarios">Usuarios</Link>
             <Link style={linkStyle} to="/roles">Roles</Link>

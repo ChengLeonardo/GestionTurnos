@@ -1,7 +1,9 @@
 import { useContext, useState } from "react";
 import { TurnosContext } from "../context/Turnos/TurnosContext";
+import { useAuth } from "../context/Auth/useAuth";
 
 export default function Especialidades() {
+  const { usuario } = useAuth();
   const { especialidades, crearEspecialidad, editarEspecialidad, eliminarEspecialidad, loading } =
     useContext(TurnosContext);
 
@@ -43,40 +45,42 @@ export default function Especialidades() {
     <div style={{ padding: "20px" }}>
       <h1>Gestión de Especialidades</h1>
 
-      {/* Formulario */}
-      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre de la especialidad"
-          value={form.nombre}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <button type="submit" style={btnStyle}>
-          {editandoId ? "Actualizar" : "Crear"}
-        </button>
-        {editandoId && (
-          <button
-            type="button"
-            style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-            onClick={() => {
-              setEditandoId(null);
-              setForm({ nombre: "" });
-            }}
-          >
-            Cancelar
+      {/* Formulario solo para Admin */}
+      {usuario?.rol === "admin" && (
+        <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+          <input
+            type="text"
+            name="nombre"
+            placeholder="Nombre de la especialidad"
+            value={form.nombre}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <button type="submit" style={btnStyle}>
+            {editandoId ? "Actualizar" : "Crear"}
           </button>
-        )}
-      </form>
+          {editandoId && (
+            <button
+              type="button"
+              style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+              onClick={() => {
+                setEditandoId(null);
+                setForm({ nombre: "" });
+              }}
+            >
+              Cancelar
+            </button>
+          )}
+        </form>
+      )}
 
       {/* Tabla */}
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
             <th style={thStyle}>Nombre</th>
-            <th style={thStyle}>Acciones</th>
+            {usuario?.rol === "admin" && <th style={thStyle}>Acciones</th>}
           </tr>
         </thead>
         <tbody>
@@ -84,15 +88,19 @@ export default function Especialidades() {
             <tr key={e.idEspecialidad} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
               <td>{e.nombre}</td>
               <td>
-                <button style={btnStyle} onClick={() => handleEditar(e)}>
-                  Editar
-                </button>{" "}
-                <button
-                  style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-                  onClick={() => handleEliminar(e.idEspecialidad)}
-                >
-                  Eliminar
-                </button>
+                {usuario?.rol === "admin" && (
+                  <>
+                    <button style={btnStyle} onClick={() => handleEditar(e)}>
+                      Editar
+                    </button>{" "}
+                    <button
+                      style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+                      onClick={() => handleEliminar(e.idEspecialidad)}
+                    >
+                      Eliminar
+                    </button>
+                  </>
+                )}
               </td>
             </tr>
           ))}
