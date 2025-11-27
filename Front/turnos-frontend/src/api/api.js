@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5177"
+  baseURL: "http://10.120.1.9:5177"
 });
 
 // ✅ Interceptor: agrega el token automáticamente

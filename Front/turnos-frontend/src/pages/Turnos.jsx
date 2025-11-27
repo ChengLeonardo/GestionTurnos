@@ -154,7 +154,7 @@ export default function Turnos() {
     // Mock upload - in real app would be a file upload
     // Here we just create an Orden record
     try {
-      const res = await fetch("http://localhost:5177/api/ordenes", {
+      const res = await fetch("http://10.120.1.9:5177/api/ordenes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
