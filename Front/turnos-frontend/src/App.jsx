@@ -15,6 +15,7 @@ import Usuarios from "./pages/Usuarios";
 import Roles from "./pages/Roles";
 import Auditoria from "./pages/Auditoria";
 import Ordenes from "./pages/Ordenes";
+import AgendaMedicas from "./pages/AgendaMedicas";
 
 // 🔒 Componente de ruta privada
 function PrivateRoute({ children }) {
@@ -133,6 +134,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <Ordenes />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/agendaMedicas"
+          element={
+            <PrivateRoute>
+              <AgendaMedicas />
             </PrivateRoute>
           }
         />

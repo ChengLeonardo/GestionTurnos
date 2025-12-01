@@ -4,6 +4,7 @@ import * as EspecialidadesService from "../../api/especialidadesService";
 import * as PacientesService from "../../api/pacientesService";
 import * as ProfesionalesService from "../../api/profesionalesService";
 import * as SedesService from "../../api/sedesService";
+import * as AgendaMedicasService from "../../api/agendaMedicasService";
 import { TurnosContext } from "./TurnosContext";
 
 export function TurnosProvider({ children }) {
@@ -12,6 +13,7 @@ export function TurnosProvider({ children }) {
   const [turnos, setTurnos] = useState([]);
   const [sedes, setSedes] = useState([]);
   const [especialidades, setEspecialidades] = useState([]);
+  const [agendaMedicas, setAgendaMedicas] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export function TurnosProvider({ children }) {
       fetchProfesionales(),
       fetchEspecialidades(),
       fetchSedes(),
+      fetchAgendaMedicas(),
     ]);
   }
 
@@ -79,6 +82,15 @@ export function TurnosProvider({ children }) {
     }
   }
 
+  async function fetchAgendaMedicas() {
+    try {
+      const data = await AgendaMedicasService.getAgendaMedicas();
+      setAgendaMedicas(data);
+    } catch (err) {
+      console.error("Error cargando agendaMedicas:", err);
+    }
+  }
+
   // ───────────────────────────────
   // 🔹 CREAR
   // ───────────────────────────────
@@ -105,6 +117,11 @@ export function TurnosProvider({ children }) {
   async function crearSede(sede) {
     const nuevo = await SedesService.crearSede(sede);
     setSedes((prev) => [...prev, nuevo]);
+  }
+
+  async function crearAgendaMedica(agendaMedica) {
+    const nuevo = await AgendaMedicasService.crearAgendaMedica(agendaMedica);
+    setAgendaMedicas((prev) => [...prev, nuevo]);
   }
 
   // ───────────────────────────────
@@ -134,6 +151,18 @@ export function TurnosProvider({ children }) {
   async function eliminarEspecialidad(id) {
     await EspecialidadesService.eliminarEspecialidad(id);
     setEspecialidades((prev) => prev.filter((e) => e.idEspecialidad !== id));
+  }
+
+  async function eliminarAgendaMedica(id) {
+    await AgendaMedicasService.eliminarAgendaMedica(id);
+    setAgendaMedicas((prev) => prev.filter((a) => a.idAgendaMedica !== id));
+  }
+
+  async function editarAgendaMedica(id, agendaMedica) {
+    const actualizada = await AgendaMedicasService.editarAgendaMedica(id, agendaMedica);
+    setAgendaMedicas((prev) =>
+      prev.map((a) => (a.idAgendaMedica === id ? actualizada : a))
+    );
   }
 
   async function editarPaciente(id, paciente) {
@@ -182,26 +211,31 @@ export function TurnosProvider({ children }) {
         turnos,
         sedes,
         especialidades,
+        agendaMedicas,
         fetchTurnos,
         fetchPacientes,
         fetchProfesionales,
         fetchSedes,
         fetchEspecialidades,
+        fetchAgendaMedicas,
         crearTurno,
         crearPaciente,
         crearProfesional,
         crearSede,
         crearEspecialidad,
+        crearAgendaMedica,
         eliminarTurno,
         eliminarPaciente,
         eliminarProfesional,
         eliminarSede,
         eliminarEspecialidad,
+        eliminarAgendaMedica,
         editarPaciente,
         editarSede,
         editarProfesional,
         editarEspecialidad,
         editarTurno,
+        editarAgendaMedica,
       }}
     >
       {children}

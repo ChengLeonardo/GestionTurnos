@@ -74,6 +74,21 @@ namespace MinimalApi.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Profesionales",
+                columns: table => new
+                {
+                    IdProfesional = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Nombre = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Profesionales", x => x.IdProfesional);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Rols",
                 columns: table => new
                 {
@@ -102,6 +117,31 @@ namespace MinimalApi.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Sedes", x => x.IdSede);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Ordenes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    IdPaciente = table.Column<int>(type: "int", nullable: false),
+                    Practica = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Autorizada = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Usada = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
+                    FechaSubida = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Ordenes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Ordenes_Pacientes_IdPaciente",
+                        column: x => x.IdPaciente,
+                        principalTable: "Pacientes",
+                        principalColumn: "IdPaciente",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -139,62 +179,41 @@ namespace MinimalApi.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Profesionales",
+                name: "AgendaMedicas",
                 columns: table => new
                 {
-                    IdProfesional = table.Column<int>(type: "int", nullable: false)
+                    IdAgendaMedica = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Nombre = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DiaSemana = table.Column<int>(type: "int", nullable: false),
+                    IdProfesional = table.Column<int>(type: "int", nullable: false),
                     IdEspecialidad = table.Column<int>(type: "int", nullable: false),
-                    IdSede = table.Column<int>(type: "int", nullable: false)
+                    IdSede = table.Column<int>(type: "int", nullable: false),
+                    InicioTurno = table.Column<TimeSpan>(type: "time(6)", nullable: false),
+                    FinTurno = table.Column<TimeSpan>(type: "time(6)", nullable: false),
+                    DuracionTurno = table.Column<int>(type: "int", nullable: false),
+                    CantidadTurnos = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Profesionales", x => x.IdProfesional);
+                    table.PrimaryKey("PK_AgendaMedicas", x => x.IdAgendaMedica);
                     table.ForeignKey(
-                        name: "FK_Profesionales_Especialidades_IdEspecialidad",
+                        name: "FK_AgendaMedicas_Especialidades_IdEspecialidad",
                         column: x => x.IdEspecialidad,
                         principalTable: "Especialidades",
                         principalColumn: "IdEspecialidad",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Profesionales_Sedes_IdSede",
+                        name: "FK_AgendaMedicas_Profesionales_IdProfesional",
+                        column: x => x.IdProfesional,
+                        principalTable: "Profesionales",
+                        principalColumn: "IdProfesional",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AgendaMedicas_Sedes_IdSede",
                         column: x => x.IdSede,
                         principalTable: "Sedes",
                         principalColumn: "IdSede",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Ordenes",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    IdPaciente = table.Column<int>(type: "int", nullable: false),
-                    Practica = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Autorizada = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Usada = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    FechaSubida = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    DerivadaAProfesionalId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Ordenes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Ordenes_Pacientes_IdPaciente",
-                        column: x => x.IdPaciente,
-                        principalTable: "Pacientes",
-                        principalColumn: "IdPaciente",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Ordenes_Profesionales_DerivadaAProfesionalId",
-                        column: x => x.DerivadaAProfesionalId,
-                        principalTable: "Profesionales",
-                        principalColumn: "IdProfesional");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -204,9 +223,9 @@ namespace MinimalApi.Migrations
                 {
                     IdTurno = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    FechaHoraInicio = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    FechaHoraFin = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    IdProfesional = table.Column<int>(type: "int", nullable: true),
+                    Fecha = table.Column<DateOnly>(type: "date", nullable: false),
+                    NroTurno = table.Column<int>(type: "int", nullable: false),
+                    IdAgendaMedica = table.Column<int>(type: "int", nullable: false),
                     IdPaciente = table.Column<int>(type: "int", nullable: false),
                     Estado = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
@@ -215,23 +234,34 @@ namespace MinimalApi.Migrations
                 {
                     table.PrimaryKey("PK_Turnos", x => x.IdTurno);
                     table.ForeignKey(
+                        name: "FK_Turnos_AgendaMedicas_IdTurno",
+                        column: x => x.IdTurno,
+                        principalTable: "AgendaMedicas",
+                        principalColumn: "IdAgendaMedica",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_Turnos_Pacientes_IdPaciente",
                         column: x => x.IdPaciente,
                         principalTable: "Pacientes",
                         principalColumn: "IdPaciente",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Turnos_Profesionales_IdProfesional",
-                        column: x => x.IdProfesional,
-                        principalTable: "Profesionales",
-                        principalColumn: "IdProfesional");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Ordenes_DerivadaAProfesionalId",
-                table: "Ordenes",
-                column: "DerivadaAProfesionalId");
+                name: "IX_AgendaMedicas_IdEspecialidad",
+                table: "AgendaMedicas",
+                column: "IdEspecialidad");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AgendaMedicas_IdProfesional",
+                table: "AgendaMedicas",
+                column: "IdProfesional");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AgendaMedicas_IdSede",
+                table: "AgendaMedicas",
+                column: "IdSede");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Ordenes_IdPaciente",
@@ -239,24 +269,9 @@ namespace MinimalApi.Migrations
                 column: "IdPaciente");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Profesionales_IdEspecialidad",
-                table: "Profesionales",
-                column: "IdEspecialidad");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Profesionales_IdSede",
-                table: "Profesionales",
-                column: "IdSede");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Turnos_IdPaciente",
                 table: "Turnos",
                 column: "IdPaciente");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Turnos_IdProfesional",
-                table: "Turnos",
-                column: "IdProfesional");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Usuarios_PacienteIdPaciente",
@@ -285,7 +300,7 @@ namespace MinimalApi.Migrations
                 name: "Usuarios");
 
             migrationBuilder.DropTable(
-                name: "Profesionales");
+                name: "AgendaMedicas");
 
             migrationBuilder.DropTable(
                 name: "Pacientes");
@@ -295,6 +310,9 @@ namespace MinimalApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "Especialidades");
+
+            migrationBuilder.DropTable(
+                name: "Profesionales");
 
             migrationBuilder.DropTable(
                 name: "Sedes");

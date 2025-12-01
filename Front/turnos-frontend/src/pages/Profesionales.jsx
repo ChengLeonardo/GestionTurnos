@@ -2,13 +2,11 @@ import { useContext, useState } from "react";
 import { TurnosContext } from "../context/Turnos/TurnosContext";
 
 export default function Profesionales() {
-  const { profesionales, especialidades, sedes, crearProfesional, eliminarProfesional, editarProfesional } =
+  const { profesionales, crearProfesional, eliminarProfesional, editarProfesional } =
     useContext(TurnosContext);
 
   const [form, setForm] = useState({
-    nombre: "",
-    idEspecialidad: "",
-    idSede: "",
+    nombre: ""
   });
   const [editingId, setEditingId] = useState(null);
 
@@ -28,14 +26,12 @@ export default function Profesionales() {
       } else {
         const nuevoProfesional = {
           nombre: form.nombre,
-          idEspecialidad: parseInt(form.idEspecialidad),
-          idSede: parseInt(form.idSede),
         };
 
         await crearProfesional(nuevoProfesional); // ✅ Usa la función del contexto
       }
 
-      setForm({ nombre: "", idEspecialidad: "", idSede: "" });
+      setForm({ nombre: "" });
     } catch (err) {
       console.error("Error al crear profesional:", err);
     }
@@ -52,8 +48,6 @@ export default function Profesionales() {
   const handleEditar = (p) => {
     setForm({
       nombre: p.nombre,
-      idEspecialidad: p.idEspecialidad,
-      idSede: p.idSede,
     });
     setEditingId(p.idProfesional);
   };
@@ -75,36 +69,6 @@ export default function Profesionales() {
           style={inputStyle}
         />
 
-        <select
-          name="idEspecialidad"
-          value={form.idEspecialidad}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        >
-          <option value="">Seleccionar especialidad</option>
-          {especialidades.map((e) => (
-            <option key={e.idEspecialidad} value={e.idEspecialidad}>
-              {e.nombre}
-            </option>
-          ))}
-        </select>
-
-        <select
-          name="idSede"
-          value={form.idSede}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        >
-          <option value="">Seleccionar sede</option>
-          {sedes.map((s) => (
-            <option key={s.idSede} value={s.idSede}>
-              {s.nombre}
-            </option>
-          ))}
-        </select>
-
         <button type="submit" style={btnStyle}>
           {editingId ? "Actualizar" : "Crear"}
         </button>
@@ -114,7 +78,7 @@ export default function Profesionales() {
             style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
             onClick={() => {
               setEditingId(null);
-              setForm({ nombre: "", idEspecialidad: "", idSede: "" });
+              setForm({ nombre: "" });
             }}
           >
             Cancelar
@@ -126,9 +90,6 @@ export default function Profesionales() {
         <thead>
           <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
             <th style={thStyle}>Nombre</th>
-            <th style={thStyle}>Especialidad</th>
-            <th style={thStyle}>Sede</th>
-            <th style={thStyle}>Dirección</th>
             <th style={thStyle}>Acciones</th>
           </tr>
         </thead>
@@ -139,9 +100,6 @@ export default function Profesionales() {
               style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}
             >
               <td>{p.nombre}</td>
-              <td>{p.especialidad || "-"}</td>
-              <td>{p.sede || "-"}</td>
-              <td>{p.direccion || "-"}</td>
               <td>
                 <button style={btnStyle} onClick={() => handleEditar(p)}>
                   Editar

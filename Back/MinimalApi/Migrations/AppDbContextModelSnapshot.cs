@@ -21,6 +21,49 @@ namespace MinimalApi.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Biblioteca.AgendaMedica", b =>
+                {
+                    b.Property<int>("IdAgendaMedica")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdAgendaMedica"));
+
+                    b.Property<int>("CantidadTurnos")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DiaSemana")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DuracionTurno")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("FinTurno")
+                        .HasColumnType("time(6)");
+
+                    b.Property<int>("IdEspecialidad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdProfesional")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdSede")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("InicioTurno")
+                        .HasColumnType("time(6)");
+
+                    b.HasKey("IdAgendaMedica");
+
+                    b.HasIndex("IdEspecialidad");
+
+                    b.HasIndex("IdProfesional");
+
+                    b.HasIndex("IdSede");
+
+                    b.ToTable("AgendaMedicas");
+                });
+
             modelBuilder.Entity("Biblioteca.AuditLog", b =>
                 {
                     b.Property<int>("Id")
@@ -79,9 +122,6 @@ namespace MinimalApi.Migrations
                     b.Property<bool>("Autorizada")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int?>("DerivadaAProfesionalId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("FechaSubida")
                         .HasColumnType("datetime(6)");
 
@@ -97,8 +137,6 @@ namespace MinimalApi.Migrations
                         .HasDefaultValue(false);
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DerivadaAProfesionalId");
 
                     b.HasIndex("IdPaciente");
 
@@ -139,20 +177,10 @@ namespace MinimalApi.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdProfesional"));
 
-                    b.Property<int>("IdEspecialidad")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdSede")
-                        .HasColumnType("int");
-
                     b.Property<string>("Nombre")
                         .HasColumnType("longtext");
 
                     b.HasKey("IdProfesional");
-
-                    b.HasIndex("IdEspecialidad");
-
-                    b.HasIndex("IdSede");
 
                     b.ToTable("Profesionales");
                 });
@@ -195,33 +223,28 @@ namespace MinimalApi.Migrations
             modelBuilder.Entity("Biblioteca.Turno", b =>
                 {
                     b.Property<int>("IdTurno")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdTurno"));
 
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
-                    b.Property<DateTime>("FechaHoraFin")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
 
-                    b.Property<DateTime>("FechaHoraInicio")
-                        .HasColumnType("datetime(6)");
+                    b.Property<int>("IdAgendaMedica")
+                        .HasColumnType("int");
 
                     b.Property<int>("IdPaciente")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IdProfesional")
+                    b.Property<int>("NroTurno")
                         .HasColumnType("int");
 
                     b.HasKey("IdTurno");
 
                     b.HasIndex("IdPaciente");
-
-                    b.HasIndex("IdProfesional");
 
                     b.ToTable("Turnos");
                 });
@@ -262,40 +285,42 @@ namespace MinimalApi.Migrations
                     b.ToTable("Usuarios");
                 });
 
-            modelBuilder.Entity("Biblioteca.Orden", b =>
-                {
-                    b.HasOne("Biblioteca.Profesional", "DerivadaAProfesional")
-                        .WithMany("Ordenes")
-                        .HasForeignKey("DerivadaAProfesionalId");
-
-                    b.HasOne("Biblioteca.Paciente", "Paciente")
-                        .WithMany("Ordenes")
-                        .HasForeignKey("IdPaciente")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DerivadaAProfesional");
-
-                    b.Navigation("Paciente");
-                });
-
-            modelBuilder.Entity("Biblioteca.Profesional", b =>
+            modelBuilder.Entity("Biblioteca.AgendaMedica", b =>
                 {
                     b.HasOne("Biblioteca.Especialidad", "Especialidad")
-                        .WithMany("Profesionales")
+                        .WithMany("AgendaMedicas")
                         .HasForeignKey("IdEspecialidad")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Biblioteca.Profesional", "Profesional")
+                        .WithMany("AgendaMedicas")
+                        .HasForeignKey("IdProfesional")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Biblioteca.Sede", "Sede")
-                        .WithMany("Profesionales")
+                        .WithMany("AgendaMedicas")
                         .HasForeignKey("IdSede")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Especialidad");
 
+                    b.Navigation("Profesional");
+
                     b.Navigation("Sede");
+                });
+
+            modelBuilder.Entity("Biblioteca.Orden", b =>
+                {
+                    b.HasOne("Biblioteca.Paciente", "Paciente")
+                        .WithMany("Ordenes")
+                        .HasForeignKey("IdPaciente")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Paciente");
                 });
 
             modelBuilder.Entity("Biblioteca.Turno", b =>
@@ -306,13 +331,15 @@ namespace MinimalApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Biblioteca.Profesional", "Profesional")
+                    b.HasOne("Biblioteca.AgendaMedica", "AgendaMedica")
                         .WithMany("Turnos")
-                        .HasForeignKey("IdProfesional");
+                        .HasForeignKey("IdTurno")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AgendaMedica");
 
                     b.Navigation("Paciente");
-
-                    b.Navigation("Profesional");
                 });
 
             modelBuilder.Entity("Biblioteca.Usuario", b =>
@@ -332,9 +359,14 @@ namespace MinimalApi.Migrations
                     b.Navigation("Rol");
                 });
 
+            modelBuilder.Entity("Biblioteca.AgendaMedica", b =>
+                {
+                    b.Navigation("Turnos");
+                });
+
             modelBuilder.Entity("Biblioteca.Especialidad", b =>
                 {
-                    b.Navigation("Profesionales");
+                    b.Navigation("AgendaMedicas");
                 });
 
             modelBuilder.Entity("Biblioteca.Paciente", b =>
@@ -346,9 +378,7 @@ namespace MinimalApi.Migrations
 
             modelBuilder.Entity("Biblioteca.Profesional", b =>
                 {
-                    b.Navigation("Ordenes");
-
-                    b.Navigation("Turnos");
+                    b.Navigation("AgendaMedicas");
                 });
 
             modelBuilder.Entity("Biblioteca.Rol", b =>
@@ -358,7 +388,7 @@ namespace MinimalApi.Migrations
 
             modelBuilder.Entity("Biblioteca.Sede", b =>
                 {
-                    b.Navigation("Profesionales");
+                    b.Navigation("AgendaMedicas");
                 });
 #pragma warning restore 612, 618
         }

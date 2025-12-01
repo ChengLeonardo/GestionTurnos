@@ -12,20 +12,25 @@ VALUES ('Cardiologia'),
        ('Clinica Medica');
 
 -- Insertar profesionales
-INSERT INTO profesionales (Nombre, IdEspecialidad, IdSede)
-VALUES ('Dr. Juan Perez', 1, 1),
-       ('Dra. Maria Lopez', 2, 2),
-       ('Dr. Zhamira Zambrano', 3, 1);
+INSERT INTO profesionales (Nombre)
+VALUES ('Dr. Juan Perez'),
+       ('Dra. Maria Lopez'),
+       ('Dr. Zhamira Zambrano');
 
 -- Insertar pacientes
 INSERT INTO pacientes (Nombre, Dni, Telefono, Email)
 VALUES ('Ana Torres', '40111222', '1133445566', 'ana@mail.com'),
        ('Luis Fernandez', '38222111', '1144556677', 'luis@mail.com');
 
+-- Insertar Agendas Medicas
+INSERT INTO AgendaMedicas (DiaSemana, IdProfesional, IdEspecialidad, IdSede, InicioTurno, FinTurno, DuracionTurno, CantidadTurnos)
+VALUES (1, 1, 1, 1, '09:00:00', '13:00:00', 30, 8),
+       (2, 2, 2, 2, '14:00:00', '18:00:00', 30, 8);
+
 -- Insertar turnos
-INSERT INTO turnos (FechaHoraInicio, FechaHoraFin, IdProfesional, IdPaciente, Estado)
-VALUES ('2025-10-02 09:00:00', '2025-10-02 09:30:00', 1, 1, 'Solicitado'),
-       ('2025-10-02 10:00:00', '2025-10-02 10:30:00', 2, 2, 'Confirmado');
+INSERT INTO turnos (Fecha, NroTurno, IdAgendaMedica, IdPaciente, Estado)
+VALUES ('2025-10-02', 1, 1, 1, 'Solicitado'),
+       ('2025-10-02', 2, 2, 2, 'Confirmado');
 
 -- Insertar órdenes
 INSERT INTO ordenes (IdPaciente, Practica, Autorizada, FechaSubida, Usada)

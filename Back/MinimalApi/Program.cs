@@ -122,6 +122,7 @@ app.MapUsersEndpoints();
 app.MapRolesEndpoints();
 app.MapOrdenesEndpoints();
 app.MapAuditEndpoints();
+app.MapAgendaMedicaEndpoints();
 
 // Pacientes
 app.MapGet("/pacientes", async (AppDbContext db) =>
@@ -176,18 +177,8 @@ app.MapDelete("/pacientes/{id}", async (int id, AppDbContext db) =>
 
 // Profesionales
 app.MapGet("/profesionales", async (AppDbContext db) => await db.Profesionales
-    .Include(p => p.Especialidad)
-    .Include(p => p.Sede)
-    .Select(p => new ProfesionalDto
-    {
-        IdProfesional = p.IdProfesional,
-        IdEspecialidad = p.IdEspecialidad,
-        IdSede = p.IdSede,
-        Nombre = p.Nombre,
-        Especialidad = p.Especialidad.Nombre,
-        Sede = p.Sede.Nombre,
-        Direccion = p.Sede.Direccion
-    })
+    .Include(p => p.AgendaMedicas)
+    .ThenInclude(p => p.Sede)
     .ToListAsync());
 
 app.MapGet("/profesionales/{id}", async (int id, AppDbContext db) =>
@@ -200,19 +191,7 @@ app.MapPost("/profesionales", async (Profesional prof, AppDbContext db) =>
 {
     db.Profesionales.Add(prof);
     await db.SaveChangesAsync();
-    var especialidad = await db.Especialidades.Where(e => e.IdEspecialidad == prof.IdEspecialidad).FirstOrDefaultAsync();
-    var sede = await db.Sedes.Where(s => s.IdSede == prof.IdSede).FirstOrDefaultAsync();
-    var profesionalConDato = new ProfesionalDto
-    {
-        IdProfesional = prof.IdProfesional,
-        IdEspecialidad = prof.IdEspecialidad,
-        IdSede = prof.IdSede,
-        Nombre = prof.Nombre,
-        Especialidad = especialidad.Nombre,
-        Sede = sede.Nombre,
-        Direccion = sede.Direccion
-    };
-    return Results.Created($"/profesionales/{prof.IdProfesional}", profesionalConDato);
+    return Results.Created($"/profesionales/{prof.IdProfesional}", prof);
 });
 
 app.MapPut("/profesionales/{id}", async (int id, Profesional data, AppDbContext db) =>
@@ -221,23 +200,10 @@ app.MapPut("/profesionales/{id}", async (int id, Profesional data, AppDbContext 
     if (prof is null) return Results.NotFound();
 
     prof.Nombre = data.Nombre;
-    prof.IdEspecialidad = data.IdEspecialidad;
-    prof.IdSede = data.IdSede;
     await db.SaveChangesAsync();
-
-    var especialidad = await db.Especialidades.Where(e => e.IdEspecialidad == prof.IdEspecialidad).FirstOrDefaultAsync();
-    var sede = await db.Sedes.Where(s => s.IdSede == prof.IdSede).FirstOrDefaultAsync();
-    var profesionalConDato = new ProfesionalDto
-    {
-        IdProfesional = prof.IdProfesional,
-        IdEspecialidad = prof.IdEspecialidad,
-        IdSede = prof.IdSede,
-        Nombre = prof.Nombre,
-        Especialidad = especialidad.Nombre,
-        Sede = sede.Nombre,
-        Direccion = sede.Direccion
-    };
-    return Results.Ok(profesionalConDato);
+    var agendaMedica = await db.AgendaMedicas.Where(a => a.IdProfesional == prof.IdProfesional).FirstOrDefaultAsync();
+    var especialidad = await db.Especialidades.Where(e => e.IdEspecialidad == agendaMedica.IdEspecialidad).FirstOrDefaultAsync();
+    return Results.Ok(prof);
 });
 
 app.MapDelete("/profesionales/{id}", async (int id, AppDbContext db) =>
@@ -304,31 +270,32 @@ app.MapDelete("/especialidades/{id}", async (int id, AppDbContext db) =>
 // Turnos
 app.MapGet("/turnos", async (AppDbContext db) =>
     await db.Turnos
-        .Include(t => t.Profesional)
+        .Include(t => t.AgendaMedica)
         .Include(t => t.Paciente)
-        .Include(t => t.Profesional.Sede)
-        .Include(t => t.Profesional.Especialidad)
+        .Include(t => t.AgendaMedica.Sede)
+        .Include(t => t.AgendaMedica.Especialidad)
         .Select(t => new TurnoDto
         {
             IdTurno = t.IdTurno,
-            FechaHoraInicio = t.FechaHoraInicio,
-            FechaHoraFin = t.FechaHoraFin,
-            IdSede = t.Profesional.IdSede,
-            Sede = t.Profesional.Sede.Nombre,
-            Especialidad = t.Profesional.Especialidad.Nombre,
-            ProfesionalNombre = t.Profesional.Nombre ?? "",
+            Fecha = t.Fecha,
+            NroTurno = t.NroTurno,
+            IdAgendaMedica = t.IdAgendaMedica,
+            IdSede = t.AgendaMedica.IdSede,
+            Sede = t.AgendaMedica.Sede.Nombre,
+            Especialidad = t.AgendaMedica.Especialidad.Nombre,
+            ProfesionalNombre = t.AgendaMedica.Profesional.Nombre ?? "",
             PacienteNombre = t.Paciente.Nombre ?? "",
             IdPaciente = t.IdPaciente,
-            IdProfesional = t.IdProfesional,
+            IdProfesional = t.AgendaMedica.IdProfesional,
             Estado = t.Estado.ToString()
         }).ToListAsync());
 
 app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
 {
-    var profesional = await db.Profesionales.FindAsync(turno.IdProfesional);
-    if (profesional != null)
+    var agendaMedica = await db.AgendaMedicas.FindAsync(turno.IdAgendaMedica);
+    if (agendaMedica != null)
     {
-        var especialidad = await db.Especialidades.FindAsync(profesional.IdEspecialidad);
+        var especialidad = await db.Especialidades.FindAsync(agendaMedica.IdEspecialidad);
         if (especialidad != null && especialidad.Nombre.Contains("Kinesiologia", StringComparison.OrdinalIgnoreCase))
         {
             var orden = await db.Ordenes
@@ -350,22 +317,23 @@ app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
     await db.SaveChangesAsync();
 
     var turnoConDatos = await db.Turnos.Where(t => t.IdTurno == turno.IdTurno)
-        .Include(t => t.Profesional)
+        .Include(t => t.AgendaMedica)
         .Include(t => t.Paciente)
-        .Include(t => t.Profesional.Sede)
-        .Include(t => t.Profesional.Especialidad)
+        .Include(t => t.AgendaMedica.Sede)
+        .Include(t => t.AgendaMedica.Especialidad)
         .Select(t => new TurnoDto
         {
             IdTurno = t.IdTurno,
-            FechaHoraInicio = t.FechaHoraInicio,
-            FechaHoraFin = t.FechaHoraFin,
-            IdSede = t.Profesional.IdSede,
-            Sede = t.Profesional.Sede.Nombre,
-            Especialidad = t.Profesional.Especialidad.Nombre,
-            ProfesionalNombre = t.Profesional.Nombre ?? "",
+            Fecha = t.Fecha,
+            NroTurno = t.NroTurno,
+            IdAgendaMedica = t.IdAgendaMedica,
+            IdSede = t.AgendaMedica.IdSede,
+            Sede = t.AgendaMedica.Sede.Nombre,
+            Especialidad = t.AgendaMedica.Especialidad.Nombre,
+            ProfesionalNombre = t.AgendaMedica.Profesional.Nombre ?? "",
             PacienteNombre = t.Paciente.Nombre ?? "",
             IdPaciente = t.IdPaciente,
-            IdProfesional = t.IdProfesional,
+            IdProfesional = t.AgendaMedica.IdProfesional,
             Estado = t.Estado.ToString()
         }).FirstOrDefaultAsync();
 
@@ -376,30 +344,31 @@ app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
 {
     var t = await db.Turnos.Where(t => t.IdTurno == id).FirstOrDefaultAsync();
     if (t is null) return Results.NotFound();
-    t.FechaHoraInicio = data.FechaHoraInicio;
-    t.FechaHoraFin = data.FechaHoraFin;
-    t.IdProfesional = data.IdProfesional;
+    t.Fecha = data.Fecha;
+    t.NroTurno = data.NroTurno;
+    t.IdAgendaMedica = data.IdAgendaMedica;
     t.IdPaciente = data.IdPaciente;
     t.Estado = data.Estado;
     await db.SaveChangesAsync();
 
     var turnoConDatos = await db.Turnos.Where(t => t.IdTurno == id)
-        .Include(t => t.Profesional)
+        .Include(t => t.AgendaMedica)
         .Include(t => t.Paciente)
-        .Include(t => t.Profesional.Sede)
-        .Include(t => t.Profesional.Especialidad)
+        .Include(t => t.AgendaMedica.Sede)
+        .Include(t => t.AgendaMedica.Especialidad)
         .Select(t => new TurnoDto
         {
             IdTurno = t.IdTurno,
-            FechaHoraInicio = t.FechaHoraInicio,
-            FechaHoraFin = t.FechaHoraFin,
-            IdSede = t.Profesional.IdSede,
-            Sede = t.Profesional.Sede.Nombre,
-            Especialidad = t.Profesional.Especialidad.Nombre,
-            ProfesionalNombre = t.Profesional.Nombre ?? "",
+            Fecha = t.Fecha,
+            NroTurno = t.NroTurno,
+            IdAgendaMedica = t.IdAgendaMedica,
+            IdSede = t.AgendaMedica.IdSede,
+            Sede = t.AgendaMedica.Sede.Nombre,
+            Especialidad = t.AgendaMedica.Especialidad.Nombre,
+            ProfesionalNombre = t.AgendaMedica.Profesional.Nombre ?? "",
             PacienteNombre = t.Paciente.Nombre ?? "",
             IdPaciente = t.IdPaciente,
-            IdProfesional = t.IdProfesional,
+            IdProfesional = t.AgendaMedica.IdProfesional,
             Estado = t.Estado.ToString()
         }).FirstOrDefaultAsync();
 

@@ -14,7 +14,6 @@ public static class OrdenesEndpoints
         {
             var ordenes = await db.Ordenes
                 .Include(o => o.Paciente)
-                .Include(o => o.DerivadaAProfesional)
                 .Select(o => new OrdenDto
                 {
                     Id = o.Id,
@@ -24,8 +23,6 @@ public static class OrdenesEndpoints
                     Autorizada = o.Autorizada,
                     Usada = o.Usada,
                     FechaSubida = o.FechaSubida,
-                    DerivadaAProfesionalId = o.DerivadaAProfesionalId,
-                    DerivadaAProfesionalNombre = o.DerivadaAProfesional != null ? o.DerivadaAProfesional.Nombre : null
                 })
                 .ToListAsync();
             return Results.Ok(ordenes);
@@ -35,7 +32,6 @@ public static class OrdenesEndpoints
         {
             var orden = await db.Ordenes
                 .Include(o => o.Paciente)
-                .Include(o => o.DerivadaAProfesional)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (orden is null) return Results.NotFound();
@@ -49,8 +45,6 @@ public static class OrdenesEndpoints
                 Autorizada = orden.Autorizada,
                 Usada = orden.Usada,
                 FechaSubida = orden.FechaSubida,
-                DerivadaAProfesionalId = orden.DerivadaAProfesionalId,
-                DerivadaAProfesionalNombre = orden.DerivadaAProfesional?.Nombre
             });
         });
 
@@ -83,8 +77,6 @@ public static class OrdenesEndpoints
             if (orden is null) return Results.NotFound();
 
             orden.Autorizada = dto.Autorizada;
-            orden.DerivadaAProfesionalId = dto.DerivadaAProfesionalId;
-
             await db.SaveChangesAsync();
             return Results.Ok();
         });

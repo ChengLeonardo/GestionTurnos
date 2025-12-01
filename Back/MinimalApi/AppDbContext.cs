@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Rol> Rols { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<AgendaMedica> AgendaMedicas { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -22,35 +23,11 @@ public class AppDbContext : DbContext
             .Property(t => t.Estado)
             .HasConversion<string>()
             .HasMaxLength(20);
-
-        modelBuilder.Entity<Turno>()
-            .HasOne(t => t.Profesional)
-            .WithMany(p => p.Turnos)
-            .HasForeignKey(t => t.IdProfesional);
+            
         modelBuilder.Entity<Turno>()
             .HasOne(t => t.Paciente)
             .WithMany(p => p.Turnos)
             .HasForeignKey(t => t.IdPaciente);
-
-        modelBuilder.Entity<Profesional>()
-            .HasOne(p => p.Sede)
-            .WithMany(s => s.Profesionales)
-            .HasForeignKey(p => p.IdSede);
-
-        modelBuilder.Entity<Profesional>()
-            .HasOne(p => p.Especialidad)
-            .WithMany(e => e.Profesionales)
-            .HasForeignKey(p => p.IdEspecialidad);
-
-        modelBuilder.Entity<Sede>()
-            .HasMany(s => s.Profesionales)
-            .WithOne(p => p.Sede)
-            .HasForeignKey(p => p.IdSede);
-
-        modelBuilder.Entity<Especialidad>()
-            .HasMany(e => e.Profesionales)
-            .WithOne(p => p.Especialidad)
-            .HasForeignKey(p => p.IdEspecialidad);
 
         modelBuilder.Entity<Orden>()
             .HasOne(o => o.Paciente)
@@ -58,12 +35,29 @@ public class AppDbContext : DbContext
             .HasForeignKey(o => o.IdPaciente);
 
         modelBuilder.Entity<Orden>()
-            .HasOne(o => o.DerivadaAProfesional)
-            .WithMany(p => p.Ordenes)
-            .HasForeignKey(o => o.DerivadaAProfesionalId);
-
-        modelBuilder.Entity<Orden>()
             .Property(o => o.Usada)
             .HasDefaultValue(false);
+        
+        modelBuilder.Entity<AgendaMedica>()
+            .HasOne(a => a.Profesional)
+            .WithMany(p => p.AgendaMedicas)
+            .HasForeignKey(a => a.IdProfesional);
+        
+        modelBuilder.Entity<AgendaMedica>()
+            .HasOne(a => a.Especialidad)
+            .WithMany(e => e.AgendaMedicas)
+            .HasForeignKey(a => a.IdEspecialidad);    
+        modelBuilder.Entity<AgendaMedica>()
+            .HasOne(a => a.Sede)
+            .WithMany(s => s.AgendaMedicas)
+            .HasForeignKey(a => a.IdSede);
+        modelBuilder.Entity<AgendaMedica>()
+            .HasMany(a => a.Turnos)
+            .WithOne(t => t.AgendaMedica)
+            .HasForeignKey(a => a.IdTurno);
+        modelBuilder.Entity<AgendaMedica>()
+            .Property(a => a.DiaSemana)
+            .HasConversion<int>();
+
     }
 }

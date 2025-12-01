@@ -8,5 +8,5 @@ public class Especialidad
     public int IdEspecialidad {get;set;}
     public string? Nombre { get; set; }
     [JsonIgnore]
-    public List<Profesional> Profesionales {get;set;}
+    public List<AgendaMedica> AgendaMedicas {get;set;}
 }

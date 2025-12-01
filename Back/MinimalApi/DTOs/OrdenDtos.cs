@@ -22,5 +22,4 @@ public class CreateOrdenDto
 public class UpdateOrdenDto
 {
     public bool Autorizada { get; set; }
-    public int? DerivadaAProfesionalId { get; set; }
 }

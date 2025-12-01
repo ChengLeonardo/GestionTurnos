@@ -15,6 +15,4 @@ public class Orden
     public bool Autorizada {get;set;}
     public bool Usada {get;set;} = false;
     public DateTime FechaSubida {get;set;}
-    public int? DerivadaAProfesionalId {get;set;}
-    public Profesional? DerivadaAProfesional {get;set;}
 }

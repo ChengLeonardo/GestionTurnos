@@ -69,6 +69,7 @@ export default function Navbar() {
             <Link style={linkStyle} to="/usuarios">Usuarios</Link>
             <Link style={linkStyle} to="/roles">Roles</Link>
             <Link style={linkStyle} to="/auditoria">Auditoría</Link>
+            <Link style={linkStyle} to="/agendaMedicas">Agenda Médica</Link>
           </>
         )}
       </div>

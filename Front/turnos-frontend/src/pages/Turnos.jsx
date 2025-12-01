@@ -5,20 +5,69 @@ import { useAuth } from "../context/Auth/useAuth";
 export default function Turnos() {
   const {
     turnos,
-    pacientes,
     profesionales,
+    pacientes,
+    agendaMedicas,
     crearTurno,
     eliminarTurno,
     editarTurno, // si todavía no existe en el context, podés comentar las partes que lo usan
   } = useContext(TurnosContext);
+  const [filtro, setFiltro] = useState({
+    sede: "",
+    especialidad: "",
+    profesional: "",
+    diaSemana: "",
+    fecha: "",
+    agenda: "",
+    nroTurno: ""
+  });
+
+  const agendasFiltradas = useMemo(() => {
+  return agendaMedicas
+    .filter(a => !filtro.sede || a.idSede == filtro.sede)
+    .filter(a => !filtro.especialidad || a.idEspecialidad == filtro.especialidad)
+    .filter(a => !filtro.profesional || a.idProfesional == filtro.profesional)
+    .filter(a => !filtro.diaSemana || a.diaSemana == filtro.diaSemana)
+    .filter(a => {
+      if (!filtro.fecha) return true;
+      const d = new Date(filtro.fecha);
+      const dia = d.getDay(); // 0-domingo … 6-sabado
+      return a.diaSemana == dia;
+    });
+}, [agendaMedicas, filtro]);
+
+const turnosGenerados = useMemo(() => {
+  if (!filtro.agenda) return [];
+
+  const agenda = agendasFiltradas.find(a => a.idAgendaMedica == filtro.agenda);
+  if (!agenda) return [];
+
+  const [h, m] = agenda.inicioTurno.split(":").map(Number);
+  const base = h * 60 + m;
+
+  return Array.from({ length: agenda.cantidadTurnos }).map((_, i) => {
+    const start = base + i * agenda.duracionTurno;
+    const end = start + agenda.duracionTurno;
+
+    const fmt = (x) =>
+      `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`;
+
+    return {
+      nro: i + 1,
+      inicio: fmt(start),
+      fin: fmt(end)
+    };
+  });
+}, [filtro.agenda, agendasFiltradas]);
+
 
   const { usuario } = useAuth();
 
   const [form, setForm] = useState({
     idPaciente: "",
     idProfesional: "",
-    fechaHoraInicio: "",
-    fechaHoraFin: "",
+    fecha: "",
+    nroTurno: ""
   });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState(""); // 🔹 para mostrar errores de validación
@@ -33,53 +82,22 @@ export default function Turnos() {
   }, [turnos, usuario]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setError(""); // limpiar error al cambiar algo
+    setFiltro({ ...filtro, [e.target.name]: e.target.value });
+    setError("");
+
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔹 Validaciones de fecha
-    const inicio = new Date(form.fechaHoraInicio);
-    const fin = new Date(form.fechaHoraFin);
-    const ahora = new Date();
-
-    // Normalizar "hoy" a minutos (para evitar problemas de segundos/ms)
-    const hoy = new Date(
-      ahora.getFullYear(),
-      ahora.getMonth(),
-      ahora.getDate(),
-      ahora.getHours(),
-      ahora.getMinutes(),
-      0,
-      0
-    );
-
-    if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
-      setError("Las fechas no son válidas.");
-      return;
-    }
-
-    if (inicio < hoy || fin < hoy) {
-      setError("Las fechas de inicio y fin no pueden ser anteriores a hoy.");
-      return;
-    }
-
-    if (fin < inicio) {
-      setError("La fecha/hora de fin no puede ser anterior a la de inicio.");
-      return;
-    }
-
-    // Si es usuario normal, forzamos su propio IdPaciente
     const idPacienteFinal =
       usuario?.rol === "usuario" ? Number(usuario.idPaciente) : Number(form.idPaciente);
 
     const payload = {
       idPaciente: idPacienteFinal,
       idProfesional: Number(form.idProfesional),
-      fechaHoraInicio: form.fechaHoraInicio,
-      fechaHoraFin: form.fechaHoraFin,
+      fecha: form.fecha,
+      nroTurno: form.nroTurno,
     };
 
     try {
@@ -100,8 +118,8 @@ export default function Turnos() {
       setForm({
         idPaciente: "",
         idProfesional: "",
-        fechaHoraInicio: "",
-        fechaHoraFin: "",
+        fecha: "",
+        nroTurno: "",
       });
       setError("");
     } catch (err) {
@@ -241,22 +259,59 @@ export default function Turnos() {
         )}
 
         <select
-          name="idProfesional"
-          value={form.idProfesional}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        >
-          <option value="">Seleccionar Profesional</option>
-          {profesionales.map((p) => (
-            <option
-              key={p.id ?? p.idProfesional}
-              value={p.id ?? p.idProfesional}
-            >
-              {p.nombre} - {p.especialidad}
-            </option>
-          ))}
-        </select>
+  value={filtro.sede}
+  onChange={e => setFiltro({ ...filtro, sede: e.target.value })}
+>
+<option value="">Seleccionar Sede</option>
+{[...new Map(agendaMedicas.map(a => [a.idSede, a.sede])).values()].map(s => (
+  <option key={s.idSede} value={s.idSede}>
+    {s.nombre}
+  </option>
+))}
+</select>
+<select
+  value={filtro.especialidad}
+  onChange={e => setFiltro({ ...filtro, especialidad: e.target.value })}
+>
+  <option value="">Seleccionar Especialidad</option>
+  {[...new Map(agendasFiltradas.map(a => [a.idEspecialidad, a.especialidad])).values()].map(s => (
+    <option key={s.idEspecialidad} value={s.idEspecialidad}>{s.nombre}</option>
+  ))}
+</select>
+<select
+  value={filtro.profesional}
+  onChange={e => setFiltro({ ...filtro, profesional: e.target.value })}
+>
+  <option value="">Seleccionar Profesional</option>
+  {[...new Map(agendasFiltradas.map(a => [a.idProfesional, a.profesional])).values()].map(s => (
+    <option key={s.idProfesional} value={s.idProfesional}>{s.nombre}</option>
+  ))}
+</select>
+<select
+  value={filtro.diaSemana}
+  onChange={e => setFiltro({ ...filtro, diaSemana: e.target.value })}
+>
+  <option value="">Día de Semana</option>
+  {[...new Map(agendasFiltradas.map(a => [a.diaSemana, a.diaSemana])).values()].map(d => (
+    <option key={d} value={d}>{d === 1 ? "Lunes" : d === 2 ? "Martes" : d === 3 ? "Miercoles" : d === 4 ? "Jueves" : d === 5 ? "Viernes" : d === 6 ? "Sabado" : d === 7 ? "Domingo" : ""}</option>
+  ))}
+</select>
+<input
+  type="date"
+  value={filtro.fecha}
+  onChange={e => setFiltro({ ...filtro, fecha: e.target.value })}
+/>
+<select
+  value={filtro.agenda}
+  onChange={e => setFiltro({ ...filtro, agenda: e.target.value })}
+>
+  <option value="">Elegir Agenda</option>
+  {agendasFiltradas.map(a => (
+    <option key={a.idAgendaMedica} value={a.idAgendaMedica}>
+      {a.idAgendaMedica} - {a.inicioTurno}
+    </option>
+  ))}
+</select>
 
         {/* Validation Message for Kinesiologia */}
         {form.idProfesional && profesionales.find(p => (p.id == form.idProfesional || p.idProfesional == form.idProfesional))?.especialidad?.toLowerCase().includes("kinesiologia") && (
@@ -270,11 +325,11 @@ export default function Turnos() {
         )}
 
         <label>
-          Fecha Inicio:
+          Fecha:
           <input
-            type="datetime-local"
-            name="fechaHoraInicio"
-            value={form.fechaHoraInicio}
+            type="date"
+            name="fecha"
+            value={form.fecha}
             onChange={handleChange}
             required
             style={inputStyle}
@@ -282,16 +337,46 @@ export default function Turnos() {
         </label>
 
         <label>
-          Fecha Fin:
-          <input
-            type="datetime-local"
-            name="fechaHoraFin"
-            value={form.fechaHoraFin}
-            onChange={handleChange}
-            required
-            style={inputStyle}
-          />
+          Turno:
+          <select>
+            <option value="">Seleccionar Turno</option>
+
+            {agendasFiltradas.flatMap((a) => {
+              const inicio = a.inicioTurno; // string "HH:mm:ss"
+              const [h, m, s] = inicio.split(":").map(Number);
+              const baseMinutes = h * 60 + m; // minutos desde las 00:00
+
+              const duracion = a.duracionTurno; // minutos
+              const cantidad = a.cantidadTurnos;
+
+              // Crear N turnos
+              return Array.from({ length: cantidad }).map((_, i) => {
+                const startMinutes = baseMinutes + i * duracion;
+                const endMinutes = startMinutes + duracion;
+
+                const start =
+                  String(Math.floor(startMinutes / 60)).padStart(2, "0") +
+                  ":" +
+                  String(startMinutes % 60).padStart(2, "0");
+
+                const end =
+                  String(Math.floor(endMinutes / 60)).padStart(2, "0") +
+                  ":" +
+                  String(endMinutes % 60).padStart(2, "0");
+
+                return (
+                  <option
+                    key={`${a.idAgendaMedica}-${i}`}
+                    value={`${a.idAgendaMedica}-${i}`}
+                  >
+                    {start} - {end}
+                  </option>
+                );
+              });
+            })}
+          </select>
         </label>
+
 
         <button type="submit" style={btnStyle}>
           {editingId
@@ -310,8 +395,7 @@ export default function Turnos() {
               setForm({
                 idPaciente: "",
                 idProfesional: "",
-                fechaHoraInicio: "",
-                fechaHoraFin: "",
+                fecha: "",
               });
               setError("");
             }}
