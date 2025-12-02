@@ -54,7 +54,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AgendaMedica>()
             .HasMany(a => a.Turnos)
             .WithOne(t => t.AgendaMedica)
-            .HasForeignKey(a => a.IdTurno);
+            .HasForeignKey(t => t.IdAgendaMedica);
         modelBuilder.Entity<AgendaMedica>()
             .Property(a => a.DiaSemana)
             .HasConversion<int>();

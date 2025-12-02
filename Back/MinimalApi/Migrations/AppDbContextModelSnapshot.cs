@@ -223,7 +223,10 @@ namespace MinimalApi.Migrations
             modelBuilder.Entity("Biblioteca.Turno", b =>
                 {
                     b.Property<int>("IdTurno")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdTurno"));
 
                     b.Property<string>("Estado")
                         .IsRequired()
@@ -243,6 +246,8 @@ namespace MinimalApi.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("IdTurno");
+
+                    b.HasIndex("IdAgendaMedica");
 
                     b.HasIndex("IdPaciente");
 
@@ -325,15 +330,15 @@ namespace MinimalApi.Migrations
 
             modelBuilder.Entity("Biblioteca.Turno", b =>
                 {
-                    b.HasOne("Biblioteca.Paciente", "Paciente")
+                    b.HasOne("Biblioteca.AgendaMedica", "AgendaMedica")
                         .WithMany("Turnos")
-                        .HasForeignKey("IdPaciente")
+                        .HasForeignKey("IdAgendaMedica")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Biblioteca.AgendaMedica", "AgendaMedica")
+                    b.HasOne("Biblioteca.Paciente", "Paciente")
                         .WithMany("Turnos")
-                        .HasForeignKey("IdTurno")
+                        .HasForeignKey("IdPaciente")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

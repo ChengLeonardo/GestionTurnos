@@ -14,4 +14,6 @@ public class TurnoDto
     public string? Sede { get; set; }
     public string? Especialidad { get; set; }
     public string? Estado { get; set; }
+    public TimeSpan HoraInicio { get; set; }
+    public TimeSpan HoraFin { get; set; }
 }

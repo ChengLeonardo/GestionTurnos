@@ -287,7 +287,9 @@ app.MapGet("/turnos", async (AppDbContext db) =>
             PacienteNombre = t.Paciente.Nombre ?? "",
             IdPaciente = t.IdPaciente,
             IdProfesional = t.AgendaMedica.IdProfesional,
-            Estado = t.Estado.ToString()
+            Estado = t.Estado.ToString(),
+            HoraInicio = t.AgendaMedica.InicioTurno.Add(TimeSpan.FromMinutes(t.NroTurno * t.AgendaMedica.DuracionTurno)),
+            HoraFin = t.AgendaMedica.InicioTurno.Add(TimeSpan.FromMinutes(t.NroTurno * t.AgendaMedica.DuracionTurno + t.AgendaMedica.DuracionTurno))
         }).ToListAsync());
 
 app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
@@ -334,7 +336,9 @@ app.MapPost("/turnos", async (Turno turno, AppDbContext db) =>
             PacienteNombre = t.Paciente.Nombre ?? "",
             IdPaciente = t.IdPaciente,
             IdProfesional = t.AgendaMedica.IdProfesional,
-            Estado = t.Estado.ToString()
+            Estado = t.Estado.ToString(),
+            HoraInicio = t.AgendaMedica.InicioTurno.Add(TimeSpan.FromMinutes(t.NroTurno * t.AgendaMedica.DuracionTurno)),
+            HoraFin = t.AgendaMedica.InicioTurno.Add(TimeSpan.FromMinutes(t.NroTurno * t.AgendaMedica.DuracionTurno + t.AgendaMedica.DuracionTurno))
         }).FirstOrDefaultAsync();
 
     return Results.Ok(turnoConDatos);
@@ -369,7 +373,9 @@ app.MapPut("/turnos/{id}", async (int id, Turno data, AppDbContext db) =>
             PacienteNombre = t.Paciente.Nombre ?? "",
             IdPaciente = t.IdPaciente,
             IdProfesional = t.AgendaMedica.IdProfesional,
-            Estado = t.Estado.ToString()
+            Estado = t.Estado.ToString(),
+            HoraInicio = t.AgendaMedica.InicioTurno.Add(TimeSpan.FromMinutes(t.NroTurno * t.AgendaMedica.DuracionTurno)),
+            HoraFin = t.AgendaMedica.InicioTurno.Add(TimeSpan.FromMinutes(t.NroTurno * t.AgendaMedica.DuracionTurno + t.AgendaMedica.DuracionTurno))
         }).FirstOrDefaultAsync();
 
     return Results.Ok(turnoConDatos);

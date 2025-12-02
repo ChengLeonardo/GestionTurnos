@@ -234,8 +234,8 @@ namespace MinimalApi.Migrations
                 {
                     table.PrimaryKey("PK_Turnos", x => x.IdTurno);
                     table.ForeignKey(
-                        name: "FK_Turnos_AgendaMedicas_IdTurno",
-                        column: x => x.IdTurno,
+                        name: "FK_Turnos_AgendaMedicas_IdAgendaMedica",
+                        column: x => x.IdAgendaMedica,
                         principalTable: "AgendaMedicas",
                         principalColumn: "IdAgendaMedica",
                         onDelete: ReferentialAction.Cascade);
@@ -267,6 +267,11 @@ namespace MinimalApi.Migrations
                 name: "IX_Ordenes_IdPaciente",
                 table: "Ordenes",
                 column: "IdPaciente");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Turnos_IdAgendaMedica",
+                table: "Turnos",
+                column: "IdAgendaMedica");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Turnos_IdPaciente",

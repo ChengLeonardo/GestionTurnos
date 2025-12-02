@@ -18,48 +18,23 @@ export default function Turnos() {
     profesional: "",
     diaSemana: "",
     fecha: "",
-    agenda: "",
-    nroTurno: ""
+    agenda: ""
   });
 
   const agendasFiltradas = useMemo(() => {
-  return agendaMedicas
-    .filter(a => !filtro.sede || a.idSede == filtro.sede)
-    .filter(a => !filtro.especialidad || a.idEspecialidad == filtro.especialidad)
-    .filter(a => !filtro.profesional || a.idProfesional == filtro.profesional)
-    .filter(a => !filtro.diaSemana || a.diaSemana == filtro.diaSemana)
-    .filter(a => {
-      if (!filtro.fecha) return true;
-      const d = new Date(filtro.fecha);
-      const dia = d.getDay(); // 0-domingo … 6-sabado
-      return a.diaSemana == dia;
-    });
-}, [agendaMedicas, filtro]);
-
-const turnosGenerados = useMemo(() => {
-  if (!filtro.agenda) return [];
-
-  const agenda = agendasFiltradas.find(a => a.idAgendaMedica == filtro.agenda);
-  if (!agenda) return [];
-
-  const [h, m] = agenda.inicioTurno.split(":").map(Number);
-  const base = h * 60 + m;
-
-  return Array.from({ length: agenda.cantidadTurnos }).map((_, i) => {
-    const start = base + i * agenda.duracionTurno;
-    const end = start + agenda.duracionTurno;
-
-    const fmt = (x) =>
-      `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`;
-
-    return {
-      nro: i + 1,
-      inicio: fmt(start),
-      fin: fmt(end)
-    };
-  });
-}, [filtro.agenda, agendasFiltradas]);
-
+    return agendaMedicas
+      .filter(a => !filtro.sede || a.idSede == filtro.sede)
+      .filter(a => !filtro.especialidad || a.idEspecialidad == filtro.especialidad)
+      .filter(a => !filtro.profesional || a.idProfesional == filtro.profesional)
+      .filter(a => !filtro.diaSemana || a.diaSemana == filtro.diaSemana)
+      .filter(a => {
+        if (!filtro.fecha) return true;
+        const d = new Date(filtro.fecha);
+        const dia = d.getDay() + 1;
+        console.log(dia);
+        return a.diaSemana == dia;
+      })
+  }, [agendaMedicas, filtro]);
 
   const { usuario } = useAuth();
 
@@ -67,6 +42,7 @@ const turnosGenerados = useMemo(() => {
     idPaciente: "",
     idProfesional: "",
     fecha: "",
+    idAgendaMedica: "",
     nroTurno: ""
   });
   const [editingId, setEditingId] = useState(null);
@@ -82,9 +58,21 @@ const turnosGenerados = useMemo(() => {
   }, [turnos, usuario]);
 
   const handleChange = (e) => {
-    setFiltro({ ...filtro, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    console.log(name, value);
+    setForm(prev => ({ ...prev, [name]: value }));
+    setFiltro(prev => ({ ...prev, [name]: value }));
     setError("");
-
+    if (name === "fecha") {
+      const fechaSeleccionada = new Date(value);
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      if (fechaSeleccionada < hoy && fechaSeleccionada.toDateString() !== hoy.toDateString()) {
+        setError("No se pueden sacar turnos para fechas pasadas.");
+        return;
+      }
+      setFiltro({ fecha: value })
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -92,17 +80,54 @@ const turnosGenerados = useMemo(() => {
 
     const idPacienteFinal =
       usuario?.rol === "usuario" ? Number(usuario.idPaciente) : Number(form.idPaciente);
+    const idAgendaMedicaFinal = agendasFiltradas[0].idAgendaMedica
+    const fechaSeleccionada = new Date(form.fecha);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    if (fechaSeleccionada < hoy && fechaSeleccionada.toDateString() !== hoy.toDateString()) {
+      setError("No se pueden sacar turnos para fechas pasadas.");
+      return;
+    }
+    const turnoExistente = turnos.find(t =>
+      t.fecha === form.fecha &&
+      Number(t.idAgendaMedica) === Number(idAgendaMedicaFinal) &&
+      Number(t.nroTurno) === Number(form.nroTurno) &&
+      t.estado !== "Cancelado"
+    );
+
+    if (turnoExistente) {
+      const idPacienteExistente = turnoExistente.idPaciente ?? turnoExistente.IdPaciente;
+      const estadoExistente = turnoExistente.estado;
+
+      if (Number(idPacienteExistente) === Number(idPacienteFinal)) {
+        if(estadoExistente === "Solicitado") {
+          setError("Tu solicitud ya está en proceso.");
+          return;
+        } else if (estadoExistente === "Confirmado" || estadoExistente === "Completado") {
+          setError("Tu solicitud ya está confirmada.");
+          return;
+        }
+      } else {
+        if (estadoExistente === "Solicitado") {
+          const confirmar = window.confirm("Ya hay un turno solicitado por otro paciente, ¿desea solicitarlo igual?");
+          if (!confirmar) return;
+        } else if (estadoExistente === "Confirmado" || estadoExistente === "Completado") {
+          setError("Ya hay un turno confirmado por otro paciente, no puede hacer la solicitud.");
+          return;
+        }
+      }
+    }
 
     const payload = {
       idPaciente: idPacienteFinal,
       idProfesional: Number(form.idProfesional),
+      idAgendaMedica: Number(idAgendaMedicaFinal),
       fecha: form.fecha,
       nroTurno: form.nroTurno,
     };
 
     try {
       if (editingId) {
-        // 🔹 EDITAR (si tenés endpoint + función en el context)
         if (editarTurno) {
           await editarTurno(editingId, payload);
         } else {
@@ -111,13 +136,14 @@ const turnosGenerados = useMemo(() => {
         setEditingId(null);
       } else {
         // 🔹 CREAR
-        console.log("Creando turno:", payload);
+        console.log("Creando turno:", JSON.stringify(payload));
         await crearTurno(payload);
       }
 
       setForm({
         idPaciente: "",
         idProfesional: "",
+        idAgendaMedica: "",
         fecha: "",
         nroTurno: "",
       });
@@ -191,21 +217,6 @@ const turnosGenerados = useMemo(() => {
       alert("Error de red.");
     }
   };
-
-  const getPacienteNombre = (idPaciente) => {
-    const p = pacientes.find(
-      (x) => x.id === idPaciente || x.idPaciente === idPaciente
-    );
-    return p?.nombre || "-";
-  };
-
-  const getProfesionalNombre = (idProfesional) => {
-    const p = profesionales.find(
-      (x) => x.id === idProfesional || x.idProfesional === idProfesional
-    );
-    return p?.nombre || "-";
-  };
-
   const getEstadoTexto = (estado) => {
     // por si en el back es un número (enum)
     if (estado === 0 || estado === "Solicitado") return "Solicitado";
@@ -258,72 +269,6 @@ const turnosGenerados = useMemo(() => {
           />
         )}
 
-        <select
-  value={filtro.sede}
-  onChange={e => setFiltro({ ...filtro, sede: e.target.value })}
->
-<option value="">Seleccionar Sede</option>
-{[...new Map(agendaMedicas.map(a => [a.idSede, a.sede])).values()].map(s => (
-  <option key={s.idSede} value={s.idSede}>
-    {s.nombre}
-  </option>
-))}
-</select>
-<select
-  value={filtro.especialidad}
-  onChange={e => setFiltro({ ...filtro, especialidad: e.target.value })}
->
-  <option value="">Seleccionar Especialidad</option>
-  {[...new Map(agendasFiltradas.map(a => [a.idEspecialidad, a.especialidad])).values()].map(s => (
-    <option key={s.idEspecialidad} value={s.idEspecialidad}>{s.nombre}</option>
-  ))}
-</select>
-<select
-  value={filtro.profesional}
-  onChange={e => setFiltro({ ...filtro, profesional: e.target.value })}
->
-  <option value="">Seleccionar Profesional</option>
-  {[...new Map(agendasFiltradas.map(a => [a.idProfesional, a.profesional])).values()].map(s => (
-    <option key={s.idProfesional} value={s.idProfesional}>{s.nombre}</option>
-  ))}
-</select>
-<select
-  value={filtro.diaSemana}
-  onChange={e => setFiltro({ ...filtro, diaSemana: e.target.value })}
->
-  <option value="">Día de Semana</option>
-  {[...new Map(agendasFiltradas.map(a => [a.diaSemana, a.diaSemana])).values()].map(d => (
-    <option key={d} value={d}>{d === 1 ? "Lunes" : d === 2 ? "Martes" : d === 3 ? "Miercoles" : d === 4 ? "Jueves" : d === 5 ? "Viernes" : d === 6 ? "Sabado" : d === 7 ? "Domingo" : ""}</option>
-  ))}
-</select>
-<input
-  type="date"
-  value={filtro.fecha}
-  onChange={e => setFiltro({ ...filtro, fecha: e.target.value })}
-/>
-<select
-  value={filtro.agenda}
-  onChange={e => setFiltro({ ...filtro, agenda: e.target.value })}
->
-  <option value="">Elegir Agenda</option>
-  {agendasFiltradas.map(a => (
-    <option key={a.idAgendaMedica} value={a.idAgendaMedica}>
-      {a.idAgendaMedica} - {a.inicioTurno}
-    </option>
-  ))}
-</select>
-
-        {/* Validation Message for Kinesiologia */}
-        {form.idProfesional && profesionales.find(p => (p.id == form.idProfesional || p.idProfesional == form.idProfesional))?.especialidad?.toLowerCase().includes("kinesiologia") && (
-          <div style={{ margin: "10px 0", padding: "10px", backgroundColor: "#e6f7ff", border: "1px solid #91d5ff", borderRadius: "4px" }}>
-            <strong>Nota:</strong> Para esta especialidad se requiere una orden médica autorizada.
-            <br />
-            <button type="button" style={{ ...btnStyle, backgroundColor: "#28a745", marginTop: "5px" }} onClick={() => handleSubirOrden()}>
-              Subir Orden Médica
-            </button>
-          </div>
-        )}
-
         <label>
           Fecha:
           <input
@@ -336,9 +281,80 @@ const turnosGenerados = useMemo(() => {
           />
         </label>
 
+        {form.fecha && agendasFiltradas.length === 0 && (
+          <div style={{
+            marginTop: "5px",
+            marginBottom: "10px",
+            padding: "8px",
+            borderRadius: "5px",
+            backgroundColor: "#fff3cd",
+            color: "#856404",
+            border: "1px solid #ffeeba"
+          }}>
+            ⚠️ No hay turnos disponibles para esta fecha.
+          </div>
+        )}
+
+        <select
+          value={filtro.sede}
+          onChange={(e) => {
+            setFiltro({
+              ...filtro,
+              sede: e.target.value,
+            });
+          }}
+        >
+          <option value="">Seleccionar Sede</option>
+          {[...new Map(agendasFiltradas.map(a => [a.idSede, a.sede])).values()].map(s => (
+            <option key={s.idSede} value={s.idSede}>
+              {s.nombre}
+            </option>
+          ))}
+        </select>
+        <select
+          value={filtro.especialidad}
+          onChange={(e) => {
+            setFiltro({
+              ...filtro,
+              especialidad: e.target.value,
+            });
+          }}
+        >
+          <option value="">Seleccionar Especialidad</option>
+          {[...new Map(agendasFiltradas.map(a => [a.idEspecialidad, a.especialidad])).values()].map(s => (
+            <option key={s.idEspecialidad} value={s.idEspecialidad}>{s.nombre}</option>
+          ))}
+        </select>
+        <select
+          name="idProfesional"
+          value={form.idProfesional}
+          onChange={handleChange}
+        >
+          <option value="">Seleccionar Profesional</option>
+          {[...new Map(agendasFiltradas.map(a => [a.idProfesional, a.profesional])).values()].map(s => (
+            <option key={s.idProfesional} value={s.idProfesional}>{s.nombre}</option>
+          ))}
+        </select>
+        <select
+          value={filtro.diaSemana}
+          onChange={(e) => {
+            setFiltro({
+              ...filtro,
+              diaSemana: e.target.value,
+            });
+          }}
+        >
+          <option value="">Día de Semana</option>
+          {[...new Map(agendasFiltradas.map(a => [a.diaSemana, a.diaSemana])).values()].map(d => (
+            <option key={d} value={d}>{d === 1 ? "Lunes" : d === 2 ? "Martes" : d === 3 ? "Miercoles" : d === 4 ? "Jueves" : d === 5 ? "Viernes" : d === 6 ? "Sabado" : d === 7 ? "Domingo" : ""}</option>
+          ))}
+        </select>
+
+
+
         <label>
           Turno:
-          <select>
+          <select name="nroTurno" value={form.nroTurno} onChange={handleChange}>
             <option value="">Seleccionar Turno</option>
 
             {agendasFiltradas.flatMap((a) => {
@@ -367,7 +383,7 @@ const turnosGenerados = useMemo(() => {
                 return (
                   <option
                     key={`${a.idAgendaMedica}-${i}`}
-                    value={`${a.idAgendaMedica}-${i}`}
+                    value={i}
                   >
                     {start} - {end}
                   </option>
@@ -403,6 +419,18 @@ const turnosGenerados = useMemo(() => {
             Cancelar Edición
           </button>
         )}
+
+        {/* Validation Message for Kinesiologia */}
+        {form.idProfesional && profesionales.find(p => (p.id == form.idProfesional || p.idProfesional == form.idProfesional))?.especialidad?.toLowerCase().includes("kinesiologia") && (
+          <div style={{ margin: "10px 0", padding: "10px", backgroundColor: "#e6f7ff", border: "1px solid #91d5ff", borderRadius: "4px" }}>
+            <strong>Nota:</strong> Para esta especialidad se requiere una orden médica autorizada.
+            <br />
+            <button type="button" style={{ ...btnStyle, backgroundColor: "#28a745", marginTop: "5px" }} onClick={() => handleSubirOrden()}>
+              Subir Orden Médica
+            </button>
+          </div>
+        )}
+
       </form>
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -412,8 +440,9 @@ const turnosGenerados = useMemo(() => {
             <th style={thStyle}>Profesional</th>
             <th style={thStyle}>Sede</th>
             <th style={thStyle}>Especialidad</th>
-            <th style={thStyle}>Fecha Hora Inicio</th>
-            <th style={thStyle}>Fecha Hora Fin</th>
+            <th style={thStyle}>Fecha</th>
+            <th style={thStyle}>Hora Inicio</th>
+            <th style={thStyle}>Hora Fin</th>
             <th style={thStyle}>Estado</th>
             <th style={thStyle}>Acciones</th>
           </tr>
@@ -434,25 +463,25 @@ const turnosGenerados = useMemo(() => {
                 }}
               >
                 <td>
-                  {t.pacienteNombre || getPacienteNombre(Number(idPaciente))}
+                  {t.pacienteNombre}
                 </td>
                 <td>
-                  {t.profesionalNombre ||
-                    getProfesionalNombre(Number(idProfesional))}
+                  {t.profesionalNombre}
                 </td>
                 <td>{t.sede}</td>
                 <td>{t.especialidad}</td>
-                <td>{t.fechaHoraInicio}</td>
-                <td>{t.fechaHoraFin}</td>
+                <td>{t.fecha}</td>
+                <td>{t.horaInicio}</td>
+                <td>{t.horaFin}</td>
                 <td>{getEstadoTexto(t.estado)}</td>
                 <td>
                   {/* Botones para Asistente y Admin */}
                   {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
                     <>
                       {t.estado !== "Cancelado" && t.estado !== "Completado" && (
-                      <button style={btnStyle} onClick={() => handleEditar(t)}>
-                        Editar
-                      </button>
+                        <button style={btnStyle} onClick={() => handleEditar(t)}>
+                          Editar
+                        </button>
                       )}
                       {" "}
                       {t.estado === "Solicitado" && ( // Solicitado
