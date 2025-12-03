@@ -123,57 +123,7 @@ app.MapRolesEndpoints();
 app.MapOrdenesEndpoints();
 app.MapAuditEndpoints();
 app.MapAgendaMedicaEndpoints();
-
-// Pacientes
-app.MapGet("/pacientes", async (AppDbContext db) =>
-    await db.Pacientes.ToListAsync());
-
-app.MapGet("/pacientes/{id}", async (int id, AppDbContext db) =>
-{
-    var p = await db.Pacientes.Where(p => p.IdPaciente == id).FirstOrDefaultAsync();
-    return p is not null ? Results.Ok(p) : Results.NotFound("Paciente no encontrado");
-});
-
-app.MapPost("/pacientes", async (Paciente paciente, AppDbContext db) =>
-{
-    var usuario = new Usuario
-    {
-        Nombre = paciente.Nombre,
-        Email = paciente.Email.ToString(),
-        RolId = 3,
-        PasswordHash = "9250E222C4C71F0C58D4C54B50A880A312E9F9FED55D5C3AA0B0E860DED99165",
-        Paciente = paciente
-    };
-    db.Pacientes.Add(paciente);
-    await db.SaveChangesAsync();
-    db.Usuarios.Add(usuario);
-    await db.SaveChangesAsync();
-    return Results.Created($"/pacientes/{paciente.IdPaciente}", paciente);
-});
-
-app.MapPut("/pacientes/{id}", async (int id, Paciente data, AppDbContext db) =>
-{
-    var p = await db.Pacientes.Where(p => p.IdPaciente == id).FirstOrDefaultAsync();
-    if (p is null) return Results.NotFound("Paciente no encontrado");
-
-    p.Nombre = data.Nombre;
-    p.Dni = data.Dni;
-    p.Telefono = data.Telefono;
-    p.Email = data.Email;
-
-    await db.SaveChangesAsync();
-    return Results.Ok(p);
-});
-
-app.MapDelete("/pacientes/{id}", async (int id, AppDbContext db) =>
-{
-    var p = await db.Pacientes.Where(p => p.IdPaciente == id).FirstOrDefaultAsync();
-    if (p is null) return Results.NotFound("Paciente no encontrado");
-
-    db.Pacientes.Remove(p);
-    await db.SaveChangesAsync();
-    return Results.Ok("Paciente eliminado correctamente");
-});
+app.MapPacientesEndpoints();
 
 // Profesionales
 app.MapGet("/profesionales", async (AppDbContext db) => await db.Profesionales

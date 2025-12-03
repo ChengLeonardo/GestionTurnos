@@ -12,14 +12,13 @@ export default function Dashboard() {
       <h1>Dashboard</h1>
       <p>Bienvenido, {usuario.rol}</p>
 
-      <div
+      <div className="container-fluid d-flex "
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
           gap: "20px",
           marginTop: "30px",
         }}
       >
+<div className="row w-100 row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {/* Rol usuario */}
         {usuario.rol === "usuario" && (
           <div style={cardStyle}>
@@ -102,6 +101,7 @@ export default function Dashboard() {
             </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );

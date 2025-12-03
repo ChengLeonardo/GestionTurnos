@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MinimalApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251202021641_Initial")]
+    [Migration("20251202203452_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -161,6 +161,9 @@ namespace MinimalApi.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("longtext");
 
+                    b.Property<int>("IdUsuario")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nombre")
                         .HasColumnType("longtext");
 
@@ -275,9 +278,6 @@ namespace MinimalApi.Migrations
                     b.Property<string>("Nombre")
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("PacienteIdPaciente")
-                        .HasColumnType("int");
-
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
 
@@ -286,7 +286,8 @@ namespace MinimalApi.Migrations
 
                     b.HasKey("IdUsuario");
 
-                    b.HasIndex("PacienteIdPaciente");
+                    b.HasIndex("IdPaciente")
+                        .IsUnique();
 
                     b.HasIndex("RolId");
 
@@ -353,8 +354,8 @@ namespace MinimalApi.Migrations
             modelBuilder.Entity("Biblioteca.Usuario", b =>
                 {
                     b.HasOne("Biblioteca.Paciente", "Paciente")
-                        .WithMany()
-                        .HasForeignKey("PacienteIdPaciente");
+                        .WithOne("Usuario")
+                        .HasForeignKey("Biblioteca.Usuario", "IdPaciente");
 
                     b.HasOne("Biblioteca.Rol", "Rol")
                         .WithMany("Usuarios")
@@ -382,6 +383,9 @@ namespace MinimalApi.Migrations
                     b.Navigation("Ordenes");
 
                     b.Navigation("Turnos");
+
+                    b.Navigation("Usuario")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Biblioteca.Profesional", b =>

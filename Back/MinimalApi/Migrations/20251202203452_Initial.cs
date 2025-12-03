@@ -65,7 +65,8 @@ namespace MinimalApi.Migrations
                     Telefono = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Email = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IdUsuario = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -158,15 +159,14 @@ namespace MinimalApi.Migrations
                     PasswordHash = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     RolId = table.Column<int>(type: "int", nullable: false),
-                    PacienteIdPaciente = table.Column<int>(type: "int", nullable: true),
                     IdPaciente = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Usuarios", x => x.IdUsuario);
                     table.ForeignKey(
-                        name: "FK_Usuarios_Pacientes_PacienteIdPaciente",
-                        column: x => x.PacienteIdPaciente,
+                        name: "FK_Usuarios_Pacientes_IdPaciente",
+                        column: x => x.IdPaciente,
                         principalTable: "Pacientes",
                         principalColumn: "IdPaciente");
                     table.ForeignKey(
@@ -279,9 +279,10 @@ namespace MinimalApi.Migrations
                 column: "IdPaciente");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Usuarios_PacienteIdPaciente",
+                name: "IX_Usuarios_IdPaciente",
                 table: "Usuarios",
-                column: "PacienteIdPaciente");
+                column: "IdPaciente",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Usuarios_RolId",

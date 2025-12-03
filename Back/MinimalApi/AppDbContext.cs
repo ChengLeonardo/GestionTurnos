@@ -18,7 +18,14 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
+        modelBuilder.Entity<Usuario>()
+            .HasOne(u => u.Paciente)
+            .WithOne(p => p.Usuario)
+            .HasForeignKey<Paciente>(p => p.IdUsuario);
+        modelBuilder.Entity<Paciente>()
+            .HasOne(p => p.Usuario)
+            .WithOne(u => u.Paciente)
+            .HasForeignKey<Usuario>(u => u.IdPaciente);
         modelBuilder.Entity<Turno>()
             .Property(t => t.Estado)
             .HasConversion<string>()

@@ -44,47 +44,49 @@ export default function Auditoria() {
             </button>
 
             {/* Tabla */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
-                <thead>
-                    <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
-                        <th style={thStyle}>ID</th>
-                        <th style={thStyle}>Usuario</th>
-                        <th style={thStyle}>Acción</th>
-                        <th style={thStyle}>Endpoint</th>
-                        <th style={thStyle}>Fecha/Hora</th>
-                        <th style={thStyle}>Detalles</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {logs.length === 0 && !loading && (
-                        <tr>
-                            <td colSpan={6} style={{ textAlign: "center", padding: "20px" }}>
-                                No hay logs de auditoría disponibles
-                            </td>
+            <div className="table-responsive text-center">
+                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
+                    <thead>
+                        <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
+                            <th style={thStyle}>ID</th>
+                            <th style={thStyle}>Usuario</th>
+                            <th style={thStyle}>Acción</th>
+                            <th style={thStyle}>Endpoint</th>
+                            <th style={thStyle}>Fecha/Hora</th>
+                            <th style={thStyle}>Detalles</th>
                         </tr>
-                    )}
-                    {logs.map(log => (
-                        <tr key={log.id} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
-                            <td style={tdStyle}>{log.id}</td>
-                            <td style={tdStyle}>{log.usuario}</td>
-                            <td style={tdStyle}>
-                                <span style={{
-                                    padding: "3px 8px",
-                                    borderRadius: "3px",
-                                    backgroundColor: log.accion === "POST" ? "#28a745" : log.accion === "PUT" ? "#ffc107" : "#dc3545",
-                                    color: "white",
-                                    fontSize: "12px"
-                                }}>
-                                    {log.accion}
-                                </span>
-                            </td>
-                            <td style={tdStyle}>{log.endpoint}</td>
-                            <td style={tdStyle}>{new Date(log.fechaHora).toLocaleString('es-AR')}</td>
-                            <td style={tdStyle}>{log.detalles || "-"}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {logs.length === 0 && !loading && (
+                            <tr>
+                                <td colSpan={6} style={{ textAlign: "center", padding: "20px" }}>
+                                    No hay logs de auditoría disponibles
+                                </td>
+                            </tr>
+                        )}
+                        {logs.map(log => (
+                            <tr key={log.id} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
+                                <td style={tdStyle}>{log.id}</td>
+                                <td style={tdStyle}>{log.usuario}</td>
+                                <td style={tdStyle}>
+                                    <span style={{
+                                        padding: "3px 8px",
+                                        borderRadius: "3px",
+                                        backgroundColor: log.accion === "POST" ? "#28a745" : log.accion === "PUT" ? "#ffc107" : "#dc3545",
+                                        color: "white",
+                                        fontSize: "12px"
+                                    }}>
+                                        {log.accion}
+                                    </span>
+                                </td>
+                                <td style={tdStyle}>{log.endpoint}</td>
+                                <td style={tdStyle}>{new Date(log.fechaHora).toLocaleString('es-AR')}</td>
+                                <td style={tdStyle}>{log.detalles || "-"}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

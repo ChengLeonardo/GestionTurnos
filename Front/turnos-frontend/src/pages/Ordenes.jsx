@@ -123,90 +123,94 @@ export default function Ordenes() {
             {/* Formulario de Creación */}
             {showForm && (
                 <form onSubmit={handleSubmit} style={formStyle}>
-                    <h3>Subir Nueva Orden</h3>
+                    <div className="row row-cols-1 row-cols-sm-3 row-cols-md-5">
+                        <h3>Subir Nueva Orden</h3>
 
-                    {(usuario?.rol === "admin" || usuario?.rol === "asistente") && (
-                        <select
-                            name="idPaciente"
-                            value={form.idPaciente}
+                        {(usuario?.rol === "admin" || usuario?.rol === "asistente") && (
+                            <select
+                                name="idPaciente"
+                                value={form.idPaciente}
+                                onChange={handleChange}
+                                required
+                                style={inputStyle}
+                            >
+                                <option value="">Seleccionar Paciente</option>
+                                {pacientes.map(p => (
+                                    <option key={p.id ?? p.idPaciente} value={p.id ?? p.idPaciente}>
+                                        {p.nombre} (DNI: {p.dni})
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+
+                        <input
+                            type="text"
+                            name="practica"
+                            placeholder="Práctica (ej. Kinesiología, Rayos X)"
+                            value={form.practica}
                             onChange={handleChange}
                             required
                             style={inputStyle}
-                        >
-                            <option value="">Seleccionar Paciente</option>
-                            {pacientes.map(p => (
-                                <option key={p.id ?? p.idPaciente} value={p.id ?? p.idPaciente}>
-                                    {p.nombre} (DNI: {p.dni})
-                                </option>
-                            ))}
-                        </select>
-                    )}
+                        />
 
-                    <input
-                        type="text"
-                        name="practica"
-                        placeholder="Práctica (ej. Kinesiología, Rayos X)"
-                        value={form.practica}
-                        onChange={handleChange}
-                        required
-                        style={inputStyle}
-                    />
-
-                    <div style={{ marginTop: "10px" }}>
-                        <button type="submit" style={btnStyle}>Guardar Orden</button>
+                        <div style={{ marginTop: "10px" }}>
+                            <button type="submit" style={btnStyle}>Guardar Orden</button>
+                        </div>
                     </div>
                 </form>
             )}
 
             {/* Tabla */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
-                <thead>
-                    <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
-                        <th style={thStyle}>ID</th>
-                        <th style={thStyle}>Paciente</th>
-                        <th style={thStyle}>Práctica</th>
-                        <th style={thStyle}>Fecha Subida</th>
-                        <th style={thStyle}>Estado</th>
-                        <th style={thStyle}>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {ordenesFiltradas.length === 0 && !loading && (
-                        <tr><td colSpan="7" style={{ textAlign: "center", padding: "20px" }}>No hay órdenes registradas.</td></tr>
-                    )}
-                    {ordenesFiltradas.map(o => (
-                        <tr key={o.id} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
-                            <td style={tdStyle}>{o.id}</td>
-                            <td style={tdStyle}>{o.pacienteNombre}</td>
-                            <td style={tdStyle}>{o.practica}</td>
-                            <td style={tdStyle}>{new Date(o.fechaSubida).toLocaleDateString()}</td>
-                            <td style={tdStyle}>
-                                {o.usada ? (
-                                    <span style={badgeSecondary}>Usada</span>
-                                ) : o.autorizada ? (
-                                    <span style={badgeSuccess}>Autorizada</span>
-                                ) : (
-                                    <span style={badgeWarning}>Pendiente</span>
-                                )}
-                            </td>
-                            <td style={tdStyle}>
-                                {(usuario?.rol === "admin" || usuario?.rol === "asistente") && !o.autorizada && !o.usada && (
-                                    <button style={btnSuccessStyle} onClick={() => handleAutorizar(o)} title="Autorizar">
-                                        ✓
-                                    </button>
-                                )}
-                                <button
-                                    style={btnDangerStyle}
-                                    onClick={() => handleEliminar(o.id)}
-                                    title="Eliminar"
-                                >
-                                    Eliminar
-                                </button>
-                            </td>
+            <div className="table-responsive text-center">
+                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
+                    <thead>
+                        <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
+                            <th style={thStyle}>ID</th>
+                            <th style={thStyle}>Paciente</th>
+                            <th style={thStyle}>Práctica</th>
+                            <th style={thStyle}>Fecha Subida</th>
+                            <th style={thStyle}>Estado</th>
+                            <th style={thStyle}>Acciones</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {ordenesFiltradas.length === 0 && !loading && (
+                            <tr><td colSpan="7" style={{ textAlign: "center", padding: "20px" }}>No hay órdenes registradas.</td></tr>
+                        )}
+                        {ordenesFiltradas.map(o => (
+                            <tr key={o.id} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
+                                <td style={tdStyle}>{o.id}</td>
+                                <td style={tdStyle}>{o.pacienteNombre}</td>
+                                <td style={tdStyle}>{o.practica}</td>
+                                <td style={tdStyle}>{new Date(o.fechaSubida).toLocaleDateString()}</td>
+                                <td style={tdStyle}>
+                                    {o.usada ? (
+                                        <span style={badgeSecondary}>Usada</span>
+                                    ) : o.autorizada ? (
+                                        <span style={badgeSuccess}>Autorizada</span>
+                                    ) : (
+                                        <span style={badgeWarning}>Pendiente</span>
+                                    )}
+                                </td>
+                                <td style={tdStyle}>
+                                    {(usuario?.rol === "admin" || usuario?.rol === "asistente") && !o.autorizada && !o.usada && (
+                                        <button style={btnSuccessStyle} onClick={() => handleAutorizar(o)} title="Autorizar">
+                                            ✓
+                                        </button>
+                                    )}
+                                    <button
+                                        style={btnDangerStyle}
+                                        onClick={() => handleEliminar(o.id)}
+                                        title="Eliminar"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
@@ -217,7 +221,6 @@ const tdStyle = { padding: "8px" };
 const inputStyle = {
     display: "block",
     width: "100%",
-    margin: "5px 0",
     padding: "8px",
     borderRadius: "5px",
     border: "1px solid #ccc",

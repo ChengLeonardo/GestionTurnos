@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
 
 namespace Biblioteca;
@@ -15,6 +15,7 @@ public class Usuario
     public string? PasswordHash { get; set; } 
     public int RolId { get; set; } 
     public Rol? Rol { get; set; }
+    [JsonIgnore]
     public Paciente? Paciente { get; set;}
     public int? IdPaciente {get; set;}
 }

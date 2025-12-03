@@ -12,15 +12,23 @@ public static class UsersEndpoints
 
         group.MapGet("/", async (AppDbContext db) =>
         {
+            var userstest = await db.Usuarios.Include(u => u.Rol).Include(u => u.Paciente).ToListAsync();
+            foreach (var user in userstest)
+            {
+                Console.WriteLine($"User: {user.Nombre}, Role: {user.Rol?.Nombre}, Patient: {user.Paciente?.Nombre}");
+            }
             var users = await db.Usuarios
                 .Include(u => u.Rol)
+                .Include(u => u.Paciente)
                 .Select(u => new UserDto
                 {
                     Id = u.IdUsuario,
                     Nombre = u.Nombre ?? "Sin Nombre",
                     Email = u.Email,
                     Rol = u.Rol == null ? "Sin Rol" : (u.Rol.Nombre ?? "Sin Rol"),
-                    RolId = u.RolId
+                    RolId = u.RolId,
+                    Dni = u.Paciente.Dni == null ? "Sin DNI" : u.Paciente.Dni.ToString(),
+                    Telefono = u.Paciente.Telefono == null ? "Sin Telefono" : u.Paciente.Telefono.ToString()
                 })
                 .ToListAsync();
             return Results.Ok(users);
@@ -30,6 +38,7 @@ public static class UsersEndpoints
         {
             var user = await db.Usuarios
                 .Include(u => u.Rol)
+                .Include(u => u.Paciente)
                 .FirstOrDefaultAsync(u => u.IdUsuario == id);
 
             if (user is null) return Results.NotFound();
@@ -40,7 +49,9 @@ public static class UsersEndpoints
                 Nombre = user.Nombre ?? "Sin Nombre",
                 Email = user.Email,
                 Rol = user.Rol != null ? (user.Rol.Nombre ?? "Sin Rol") : "Sin Rol",
-                RolId = user.RolId
+                RolId = user.RolId,
+                Dni = user.Paciente.Dni == null ? "Sin DNI" : user.Paciente.Dni.ToString(),
+                Telefono = user.Paciente.Telefono == null ? "Sin Telefono" : user.Paciente.Telefono.ToString()
             });
         });
 
@@ -61,9 +72,10 @@ public static class UsersEndpoints
                 var paciente = new Paciente
                 {
                     Nombre = dto.Nombre,
-                    Dni = "11111111",
-                    Telefono = "1111111",
-                    Email = dto.Email
+                    Dni = dto.Dni.ToString(),
+                    Telefono = dto.Telefono,
+                    Email = dto.Email,
+
                 };
 
                 db.Usuarios.Add(user);
@@ -84,7 +96,9 @@ public static class UsersEndpoints
                     Id = user.IdUsuario,
                     Nombre = user.Nombre,
                     Email = user.Email,
-                    RolId = user.RolId
+                    RolId = user.RolId,
+                    Dni = user.Paciente?.Dni ?? "",
+                    Telefono = user.Paciente?.Telefono ?? ""
                 });
         });
 
@@ -96,6 +110,9 @@ public static class UsersEndpoints
             user.Nombre = dto.Nombre;
             user.Email = dto.Email;
             user.RolId = dto.RolId;
+            user.Paciente.Dni = dto.Dni ?? "";
+            user.Paciente.Telefono = dto.Telefono ?? "";
+            user.Paciente.Email = dto.Email;
 
             await db.SaveChangesAsync();
             return Results.Ok();
@@ -103,7 +120,7 @@ public static class UsersEndpoints
 
         group.MapDelete("/{id}", async (int id, AppDbContext db) =>
         {
-            var user = await db.Usuarios.FindAsync(id);
+            var user = await db.Usuarios.Include(u => u.Paciente).FirstOrDefaultAsync(u => u.IdUsuario == id);
             if (user is null) return Results.NotFound();
 
             db.Usuarios.Remove(user);

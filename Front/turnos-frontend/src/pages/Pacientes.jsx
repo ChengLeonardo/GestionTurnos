@@ -11,7 +11,7 @@ export default function Pacientes() {
     loading,
   } = useContext(TurnosContext);
 
-  const [form, setForm] = useState({ nombre: "", dni: "", telefono: "", email: "" });
+  const [form, setForm] = useState({ nombre: "", dni: "", telefono: "", email: "", contrasena: "" });
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function Pacientes() {
       await crearPaciente(form);
     }
 
-    setForm({ nombre: "", dni: "", telefono: "", email: "" });
+    setForm({ nombre: "", dni: "", telefono: "", email: "", contrasena: "" });
   };
 
   const handleEliminar = async (idPaciente) => {
@@ -49,6 +49,7 @@ export default function Pacientes() {
       dni: p.dni,
       telefono: p.telefono,
       email: p.email,
+      contrasena: p.password,
     });
     setEditingId(p.idPaciente);
   };
@@ -61,99 +62,111 @@ export default function Pacientes() {
 
       {/* Formulario */}
       <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre"
-          value={form.nombre}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <input
-          type="number"
-          name="dni"
-          placeholder="DNI"
-          value={form.dni}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <input
-          type="number"
-          name="telefono"
-          placeholder="Teléfono"
-          value={form.telefono}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <button type="submit" style={btnStyle}>
-          {editingId ? "Actualizar" : "Crear"}
-        </button>
-        {editingId && (
-          <button
-            type="button"
-            style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-            onClick={() => {
-              setEditingId(null);
-              setForm({ nombre: "", dni: "", telefono: "", email: "" });
-            }}
-          >
-            Cancelar
+        <div className="row row-cols-1 row-cols-sm-3 row-cols-md-5">
+          <input
+            type="text"
+            name="nombre"
+            placeholder="Nombre"
+            value={form.nombre}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="number"
+            name="dni"
+            placeholder="DNI"
+            value={form.dni}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="number"
+            name="telefono"
+            placeholder="Teléfono"
+            value={form.telefono}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="password"
+            name="contrasena"
+            placeholder="Contraseña"
+            value={form.contrasena}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <button type="submit" style={btnStyle}>
+            {editingId ? "Actualizar" : "Crear"}
           </button>
-        )}
+          {editingId && (
+            <button
+              type="button"
+              style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+              onClick={() => {
+                setEditingId(null);
+                setForm({ nombre: "", dni: "", telefono: "", email: "", contrasena: "" });
+              }}
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Tabla */}
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
-            <th style={thStyle}>Nombre</th>
-            <th style={thStyle}>DNI</th>
-            <th style={thStyle}>Teléfono</th>
-            <th style={thStyle}>Email</th>
-            <th style={thStyle}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pacientes.map((p) => (
-            <tr key={p.idPaciente} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
-              <td>{p.nombre}</td>
-              <td>{p.dni}</td>
-              <td>{p.telefono}</td>
-              <td>{p.email}</td>
-              <td>
-                <button style={btnStyle} onClick={() => handleEditar(p)}>
-                  Editar
-                </button>{" "}
-                <button
-                  style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-                  onClick={() => handleEliminar(p.idPaciente)}
-                >
-                  Eliminar
-                </button>
-              </td>
+      <div className="table-responsive text-center">
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
+              <th style={thStyle}>Nombre</th>
+              <th style={thStyle}>DNI</th>
+              <th style={thStyle}>Teléfono</th>
+              <th style={thStyle}>Email</th>
+              <th style={thStyle}>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {pacientes.map((p) => (
+              <tr key={p.idPaciente} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
+                <td>{p.nombre}</td>
+                <td>{p.dni}</td>
+                <td>{p.telefono}</td>
+                <td>{p.email}</td>
+                <td>
+                  <button style={btnStyle} onClick={() => handleEditar(p)}>
+                    Editar
+                  </button>{" "}
+                  <button
+                    style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+                    onClick={() => handleEliminar(p.idPaciente)}
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
 const thStyle = { padding: "10px" };
 const inputStyle = {
-  margin: "5px",
   padding: "5px",
   borderRadius: "5px",
   border: "1px solid #ccc",

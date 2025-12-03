@@ -1,13 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/Auth/useAuth";
 
-
 const navStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
   padding: "10px 20px",
-  backgroundColor: "#1E90FF",
+  backgroundColor: "#007BFF", // Azul
   color: "white",
   boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
 };
@@ -37,47 +33,83 @@ export default function Navbar() {
   };
 
   return (
-    <nav style={navStyle}>
-      <div style={{ display: "flex", gap: "15px" }}>
-        <Link style={linkStyle} to="/dashboard">Dashboard</Link>
+    <nav className="navbar navbar-expand-lg " style={navStyle}>
+      <div className="container-fluid">
 
-        {/* Pacientes - Asistente y Admin */}
-        {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
-          <Link style={linkStyle} to="/pacientes">Pacientes</Link>
-        )}
+        <Link className="navbar-brand" style={linkStyle} to="/dashboard">
+          Dashboard
+        </Link>
 
-        {/* Turnos - Asistente y Admin */}
-        {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
-          <Link style={linkStyle} to="/turnos">Turnos</Link>
-        )}
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
 
-        {/* Ordenes - Visible para todos (pacientes suben, admin/asistente gestionan) */}
-        <Link style={linkStyle} to="/ordenes">Órdenes</Link>
+        <div className="collapse navbar-collapse text-center" id="navbarNav">
+          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
 
-        {/* Reportes - Asistente y Admin */}
-        {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
-          <Link style={linkStyle} to="/reportes">Reportes</Link>
-        )}
-        {/* Especialidades - Visible para todos */}
-        <Link style={linkStyle} to="/especialidades">Especialidades</Link>
-        {/* Sedes - Visible para todos */}
-        <Link style={linkStyle} to="/sedes">Sedes</Link>
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" style={linkStyle}>Turnos</a>
+                <ul className="dropdown-menu bg-dark">
+                  <li><Link className="dropdown-item" style={linkStyle} to="/turnos">Turnos</Link></li>
+                  <li><Link className="dropdown-item" style={linkStyle} to="/ordenes">Órdenes</Link></li>
+                </ul>
+              </li>
 
-        {usuario?.rol === "admin" && (
-          <>
-            <Link style={linkStyle} to="/profesionales">Profesionales</Link>
-            <Link style={linkStyle} to="/usuarios">Usuarios</Link>
-            <Link style={linkStyle} to="/roles">Roles</Link>
-            <Link style={linkStyle} to="/auditoria">Auditoría</Link>
-            <Link style={linkStyle} to="/agendaMedicas">Agenda Médica</Link>
-          </>
-        )}
+            {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
+              <li className="nav-item">
+                <Link className="nav-link" style={linkStyle} to="/pacientes">Pacientes</Link>
+              </li>
+            )}
+
+            <li className="nav-item">
+              <Link className="nav-link" style={linkStyle} to="/especialidades">Especialidades</Link>
+            </li>
+
+            <li className="nav-item">
+              <Link className="nav-link" style={linkStyle} to="/sedes">Sedes</Link>
+            </li>
+
+            {usuario?.rol === "admin" && (
+              <>
+                <li className="nav-item"><Link className="nav-link" style={linkStyle} to="/profesionales">Profesionales</Link></li>
+                <li className="nav-item"><Link className="nav-link" style={linkStyle} to="/agendaMedicas">Agenda Médica</Link></li>
+                <li className="nav-item dropdown"><a className="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" href="#" style={linkStyle}>Usuarios</a>
+                <ul className="dropdown-menu bg-dark">
+                  <li><Link className="dropdown-item" style={linkStyle} to="/usuarios">Usuarios</Link></li>
+                  <li><Link className="dropdown-item" style={linkStyle} to="/roles">Roles</Link></li>
+                </ul>
+                </li>
+                <li className="nav-item"><Link className="nav-link" style={linkStyle} to="/auditoria">Auditoría</Link></li>
+              </>
+            )}
+
+            {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
+              <li className="nav-item">
+                <Link className="nav-link" style={linkStyle} to="/reportes">Reportes</Link>
+              </li>
+            )}
+
+            {/* LOGIN / LOGOUT */}
+            <li className="nav-item">
+              {usuario ? (
+                <button style={btnStyle} onClick={handleLogout}>Logout</button>
+              ) : (
+                <Link className="nav-link" style={linkStyle} to="/login">Login</Link>
+              )}
+            </li>
+
+          </ul>
+        </div>
+
       </div>
-      {usuario ? (
-        <button style={btnStyle} onClick={handleLogout}>Logout</button>
-      ) : (
-        <Link style={linkStyle} to="/login">Login</Link>
-      )}
     </nav>
   );
 }

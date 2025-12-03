@@ -7,7 +7,7 @@ export default function Usuarios() {
   const { usuario } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [roles, setRoles] = useState([]);
-  const [form, setForm] = useState({ nombre: "", email: "", password: "", rolId: "" });
+  const [form, setForm] = useState({ nombre: "", email: "", password: "", rolId: "", dni: "", telefono: "" });
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,6 +44,8 @@ export default function Usuarios() {
     const payload = {
       nombre: form.nombre,
       email: form.email,
+      dni: form.dni,
+      telefono: form.telefono,
       rolId: Number(form.rolId)
     };
 
@@ -72,7 +74,9 @@ export default function Usuarios() {
       nombre: u.nombre,
       email: u.email,
       password: "",
-      rolId: u.rolId
+      rolId: u.rolId,
+      dni: u.dni,
+      telefono: u.telefono
     });
     setEditingId(u.id);
   };
@@ -99,104 +103,133 @@ export default function Usuarios() {
 
       {/* Formulario */}
       <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre"
-          value={form.nombre}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        {!editingId && (
+        <div className="row row-cols-1 row-cols-sm-3 row-cols-md-5">
           <input
-            type="password"
-            name="password"
-            placeholder="Contraseña"
-            value={form.password}
+            type="text"
+            name="nombre"
+            placeholder="Nombre"
+            value={form.nombre}
             onChange={handleChange}
             required
             style={inputStyle}
           />
-        )}
-        <select
-          name="rolId"
-          value={form.rolId}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        >
-          <option value="">Seleccionar Rol</option>
-          {roles.map(r => (
-            <option key={r.idRol} value={r.idRol}>{r.nombre}</option>
-          ))}
-        </select>
-        <button type="submit" style={btnStyle}>
-          {editingId ? "Actualizar" : "Crear"}
-        </button>
-        {editingId && (
-          <button
-            type="button"
-            style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-            onClick={() => {
-              setEditingId(null);
-              setForm({ nombre: "", email: "", password: "", rolId: "" });
-            }}
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          {!editingId && (
+            <input
+              type="password"
+              name="password"
+              placeholder="Contraseña"
+              value={form.password}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            />
+          )}
+          <select
+            name="rolId"
+            value={form.rolId}
+            onChange={handleChange}
+            required
+            style={inputStyle}
           >
-            Cancelar
+            <option value="">Seleccionar Rol</option>
+            {roles.map(r => (
+              <option key={r.idRol} value={r.idRol}>{r.nombre}</option>
+            ))}
+          </select>
+          {form.rolId === "3" && (
+            <>
+              <input
+                type="number"
+                name="dni"
+                placeholder="DNI"
+                value={form.dni}
+                onChange={handleChange}
+                required
+                style={inputStyle}
+              />
+              <input
+                type="number"
+                name="telefono"
+                placeholder="Teléfono"
+                value={form.telefono}
+                onChange={handleChange}
+                required
+                style={inputStyle}
+              />
+            </>
+          )}
+          <button type="submit" style={btnStyle}>
+            {editingId ? "Actualizar" : "Crear"}
           </button>
-        )}
+          {editingId && (
+            <button
+              type="button"
+              style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+              onClick={() => {
+                setEditingId(null);
+                setForm({ nombre: "", email: "", password: "", rolId: "", dni: "", telefono: "" });
+              }}
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Tabla */}
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
-            <th style={thStyle}>ID</th>
-            <th style={thStyle}>Nombre</th>
-            <th style={thStyle}>Email</th>
-            <th style={thStyle}>Rol</th>
-            <th style={thStyle}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map(u => (
-            <tr key={u.id} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
-              <td>{u.id}</td>
-              <td>{u.nombre}</td>
-              <td>{u.email}</td>
-              <td>{u.rol}</td>
-              <td>
-                <button style={btnStyle} onClick={() => handleEditar(u)}>
-                  Editar
-                </button>{" "}
-                <button
-                  style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-                  onClick={() => handleEliminar(u.id)}
-                >
-                  Eliminar
-                </button>
-              </td>
+      <div className="table-responsive text-center">
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
+              <th style={thStyle}>ID</th>
+              <th style={thStyle}>Nombre</th>
+              <th style={thStyle}>Email</th>
+              <th style={thStyle}>Rol</th>
+              {form.rolId === "3" && <th style={thStyle}>Dni</th>}
+              {form.rolId === "3" && <th style={thStyle}>Telefono</th>}
+              <th style={thStyle}>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {usuarios.map(u => (
+              <tr key={u.id} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
+                <td>{u.id}</td>
+                <td>{u.nombre}</td>
+                <td>{u.email}</td>
+                <td>{u.rol}</td>
+                {form.rolId === "3" && <td>{u.dni}</td>}
+                {form.rolId === "3" && <td>{u.telefono}</td>}
+                <td>
+                  <button style={btnStyle} onClick={() => handleEditar(u)}>
+                    Editar
+                  </button>{" "}
+                  <button
+                    style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+                    onClick={() => handleEliminar(u.id)}
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
 const thStyle = { padding: "10px" };
 const inputStyle = {
-  margin: "5px",
   padding: "5px",
   borderRadius: "5px",
   border: "1px solid #ccc",

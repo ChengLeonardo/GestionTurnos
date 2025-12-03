@@ -5,6 +5,7 @@ import { useAuth } from "../context/Auth/useAuth";
 export default function Turnos() {
   const {
     turnos,
+    especialidades,
     profesionales,
     pacientes,
     agendaMedicas,
@@ -31,7 +32,6 @@ export default function Turnos() {
         if (!filtro.fecha) return true;
         const d = new Date(filtro.fecha);
         const dia = d.getDay() + 1;
-        console.log(dia);
         return a.diaSemana == dia;
       })
   }, [agendaMedicas, filtro]);
@@ -59,7 +59,6 @@ export default function Turnos() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(name, value);
     setForm(prev => ({ ...prev, [name]: value }));
     setFiltro(prev => ({ ...prev, [name]: value }));
     setError("");
@@ -100,7 +99,7 @@ export default function Turnos() {
       const estadoExistente = turnoExistente.estado;
 
       if (Number(idPacienteExistente) === Number(idPacienteFinal)) {
-        if(estadoExistente === "Solicitado") {
+        if (estadoExistente === "Solicitado") {
           setError("Tu solicitud ya está en proceso.");
           return;
         } else if (estadoExistente === "Confirmado" || estadoExistente === "Completado") {
@@ -245,116 +244,126 @@ export default function Turnos() {
       )}
 
       <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-        {(usuario?.rol === "admin" || usuario?.rol === "asistente") ? (
+        <div className="row row-cols-1 row-cols-sm-3 row-cols-md-5 row-cols-lg-8">
+
+
+          {(usuario?.rol === "admin" || usuario?.rol === "asistente") ? (
+            <select
+              name="idPaciente"
+              value={form.idPaciente}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            >
+              <option value="">Seleccionar Paciente</option>
+              {pacientes.map((p) => (
+                <option key={p.id ?? p.idPaciente} value={p.id ?? p.idPaciente}>
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="hidden"
+              name="idPaciente"
+              value={usuario?.id ?? ""}
+              readOnly
+            />
+          )}
+
+          <label>
+            Fecha:
+            <input
+              type="date"
+              name="fecha"
+              value={form.fecha}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            />
+          </label>
+
+          {form.fecha && agendasFiltradas.length === 0 && (
+            <div style={{
+              marginTop: "5px",
+              marginBottom: "10px",
+              padding: "8px",
+              borderRadius: "5px",
+              backgroundColor: "#fff3cd",
+              color: "#856404",
+              border: "1px solid #ffeeba"
+            }}>
+              ⚠️ No hay turnos disponibles para esta fecha.
+            </div>
+          )}
+
           <select
-            name="idPaciente"
-            value={form.idPaciente}
-            onChange={handleChange}
-            required
             style={inputStyle}
+            value={filtro.sede}
+            onChange={(e) => {
+              setFiltro({
+                ...filtro,
+                sede: e.target.value,
+              });
+            }}
           >
-            <option value="">Seleccionar Paciente</option>
-            {pacientes.map((p) => (
-              <option key={p.id ?? p.idPaciente} value={p.id ?? p.idPaciente}>
-                {p.nombre}
+            <option value="">Seleccionar Sede</option>
+            {[...new Map(agendasFiltradas.map(a => [a.idSede, a.sede])).values()].map(s => (
+              <option key={s.idSede} value={s.idSede}>
+                {s.nombre}
               </option>
             ))}
           </select>
-        ) : (
-          <input
-            type="hidden"
-            name="idPaciente"
-            value={usuario?.id ?? ""}
-            readOnly
-          />
-        )}
-
-        <label>
-          Fecha:
-          <input
-            type="date"
-            name="fecha"
-            value={form.fecha}
-            onChange={handleChange}
-            required
+          <select
             style={inputStyle}
-          />
-        </label>
-
-        {form.fecha && agendasFiltradas.length === 0 && (
-          <div style={{
-            marginTop: "5px",
-            marginBottom: "10px",
-            padding: "8px",
-            borderRadius: "5px",
-            backgroundColor: "#fff3cd",
-            color: "#856404",
-            border: "1px solid #ffeeba"
-          }}>
-            ⚠️ No hay turnos disponibles para esta fecha.
-          </div>
-        )}
-
-        <select
-          value={filtro.sede}
-          onChange={(e) => {
-            setFiltro({
-              ...filtro,
-              sede: e.target.value,
-            });
-          }}
-        >
-          <option value="">Seleccionar Sede</option>
-          {[...new Map(agendasFiltradas.map(a => [a.idSede, a.sede])).values()].map(s => (
-            <option key={s.idSede} value={s.idSede}>
-              {s.nombre}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filtro.especialidad}
-          onChange={(e) => {
-            setFiltro({
-              ...filtro,
-              especialidad: e.target.value,
-            });
-          }}
-        >
-          <option value="">Seleccionar Especialidad</option>
-          {[...new Map(agendasFiltradas.map(a => [a.idEspecialidad, a.especialidad])).values()].map(s => (
-            <option key={s.idEspecialidad} value={s.idEspecialidad}>{s.nombre}</option>
-          ))}
-        </select>
-        <select
-          name="idProfesional"
-          value={form.idProfesional}
-          onChange={handleChange}
-        >
-          <option value="">Seleccionar Profesional</option>
-          {[...new Map(agendasFiltradas.map(a => [a.idProfesional, a.profesional])).values()].map(s => (
-            <option key={s.idProfesional} value={s.idProfesional}>{s.nombre}</option>
-          ))}
-        </select>
-        <select
-          value={filtro.diaSemana}
-          onChange={(e) => {
-            setFiltro({
-              ...filtro,
-              diaSemana: e.target.value,
-            });
-          }}
-        >
-          <option value="">Día de Semana</option>
-          {[...new Map(agendasFiltradas.map(a => [a.diaSemana, a.diaSemana])).values()].map(d => (
-            <option key={d} value={d}>{d === 1 ? "Lunes" : d === 2 ? "Martes" : d === 3 ? "Miercoles" : d === 4 ? "Jueves" : d === 5 ? "Viernes" : d === 6 ? "Sabado" : d === 7 ? "Domingo" : ""}</option>
-          ))}
-        </select>
+            value={filtro.especialidad}
+            onChange={(e) => {
+              setFiltro({
+                ...filtro,
+                especialidad: e.target.value,
+              });
+            }}
+          >
+            <option value="">Seleccionar Especialidad</option>
+            {[...new Map(agendasFiltradas.map(a => [a.idEspecialidad, a.especialidad])).values()].map(s => (
+              <option key={s.idEspecialidad} value={s.idEspecialidad}>{s.nombre}</option>
+            ))}
+          </select>
+          <select
+            style={inputStyle}
+            name="idProfesional"
+            value={form.idProfesional}
+            onChange={handleChange}
+          >
+            <option value="">Seleccionar Profesional</option>
+            {[...new Map(agendasFiltradas.map(a => [a.idProfesional, a.profesional])).values()].map(s => (
+              <option key={s.idProfesional} value={s.idProfesional}>{s.nombre}</option>
+            ))}
+          </select>
+          <select
+            style={inputStyle}
+            value={filtro.diaSemana}
+            onChange={(e) => {
+              setFiltro({
+                ...filtro,
+                diaSemana: e.target.value,
+              });
+            }}
+          >
+            <option value="">Día de Semana</option>
+            {[...new Map(agendasFiltradas.map(a => [a.diaSemana, a.diaSemana])).values()].map(d => (
+              <option key={d} value={d}>{d === 1 ? "Lunes" : d === 2 ? "Martes" : d === 3 ? "Miercoles" : d === 4 ? "Jueves" : d === 5 ? "Viernes" : d === 6 ? "Sabado" : d === 7 ? "Domingo" : ""}</option>
+            ))}
+          </select>
 
 
 
-        <label>
-          Turno:
-          <select name="nroTurno" value={form.nroTurno} onChange={handleChange}>
+          <select
+            style={inputStyle}
+            name="nroTurno"
+            value={form.nroTurno}
+            onChange={handleChange}
+          >
             <option value="">Seleccionar Turno</option>
 
             {agendasFiltradas.flatMap((a) => {
@@ -391,152 +400,152 @@ export default function Turnos() {
               });
             })}
           </select>
-        </label>
 
 
-        <button type="submit" style={btnStyle}>
-          {editingId
-            ? "Actualizar Turno"
-            : usuario?.rol === "usuario"
-              ? "Sacar Turno"
-              : "Crear Turno"}
-        </button>
-
-        {editingId && (
-          <button
-            type="button"
-            style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-            onClick={() => {
-              setEditingId(null);
-              setForm({
-                idPaciente: "",
-                idProfesional: "",
-                fecha: "",
-              });
-              setError("");
-            }}
-          >
-            Cancelar Edición
+          <button type="submit" style={btnStyle}>
+            {editingId
+              ? "Actualizar Turno"
+              : usuario?.rol === "usuario"
+                ? "Sacar Turno"
+                : "Crear Turno"}
           </button>
-        )}
 
-        {/* Validation Message for Kinesiologia */}
-        {form.idProfesional && profesionales.find(p => (p.id == form.idProfesional || p.idProfesional == form.idProfesional))?.especialidad?.toLowerCase().includes("kinesiologia") && (
-          <div style={{ margin: "10px 0", padding: "10px", backgroundColor: "#e6f7ff", border: "1px solid #91d5ff", borderRadius: "4px" }}>
-            <strong>Nota:</strong> Para esta especialidad se requiere una orden médica autorizada.
-            <br />
-            <button type="button" style={{ ...btnStyle, backgroundColor: "#28a745", marginTop: "5px" }} onClick={() => handleSubirOrden()}>
-              Subir Orden Médica
+          {editingId && (
+            <button
+              type="button"
+              style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+              onClick={() => {
+                setEditingId(null);
+                setForm({
+                  idPaciente: "",
+                  idProfesional: "",
+                  fecha: "",
+                });
+                setError("");
+              }}
+            >
+              Cancelar Edición
             </button>
-          </div>
-        )}
+          )}
 
+          {/* Validation Message for Kinesiologia */}
+          {filtro.especialidad && especialidades.find(e => Number(e.idEspecialidad) == Number(filtro.especialidad))?.nombre?.toLowerCase().includes("kinesiologia") && (
+            <div style={{ margin: "10px 0", padding: "10px", backgroundColor: "#e6f7ff", border: "1px solid #91d5ff", borderRadius: "4px" }}>
+              <strong>Nota:</strong> Para esta especialidad se requiere una orden médica autorizada.
+              <br />
+              <button type="button" style={{ ...btnStyle, backgroundColor: "#28a745", marginTop: "5px" }} onClick={() => handleSubirOrden()}>
+                Subir Orden Médica
+              </button>
+            </div>
+          )}
+        </div>
       </form>
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
-            <th style={thStyle}>Paciente</th>
-            <th style={thStyle}>Profesional</th>
-            <th style={thStyle}>Sede</th>
-            <th style={thStyle}>Especialidad</th>
-            <th style={thStyle}>Fecha</th>
-            <th style={thStyle}>Hora Inicio</th>
-            <th style={thStyle}>Hora Fin</th>
-            <th style={thStyle}>Estado</th>
-            <th style={thStyle}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
+      <div className="table-responsive text-center">
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
+              <th style={thStyle}>Paciente</th>
+              <th style={thStyle}>Profesional</th>
+              <th style={thStyle}>Sede</th>
+              <th style={thStyle}>Especialidad</th>
+              <th style={thStyle}>Fecha</th>
+              <th style={thStyle}>Hora Inicio</th>
+              <th style={thStyle}>Hora Fin</th>
+              <th style={thStyle}>Estado</th>
+              <th style={thStyle}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
 
-          {turnosFiltrados.map((t) => {
-            const idTurno = t.id ?? t.idTurno ?? t.IdTurno;
-            const idPaciente = t.idPaciente ?? t.IdPaciente;
-            const idProfesional = t.idProfesional ?? t.IdProfesional;
+            {turnosFiltrados.map((t) => {
+              const idTurno = t.id ?? t.idTurno ?? t.IdTurno;
+              const idPaciente = t.idPaciente ?? t.IdPaciente;
+              const idProfesional = t.idProfesional ?? t.IdProfesional;
 
-            return (
-              <tr
-                key={idTurno}
-                style={{
-                  textAlign: "center",
-                  borderBottom: "1px solid #ccc",
-                }}
-              >
-                <td>
-                  {t.pacienteNombre}
-                </td>
-                <td>
-                  {t.profesionalNombre}
-                </td>
-                <td>{t.sede}</td>
-                <td>{t.especialidad}</td>
-                <td>{t.fecha}</td>
-                <td>{t.horaInicio}</td>
-                <td>{t.horaFin}</td>
-                <td>{getEstadoTexto(t.estado)}</td>
-                <td>
-                  {/* Botones para Asistente y Admin */}
-                  {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
-                    <>
-                      {t.estado !== "Cancelado" && t.estado !== "Completado" && (
-                        <button style={btnStyle} onClick={() => handleEditar(t)}>
-                          Editar
-                        </button>
-                      )}
-                      {" "}
-                      {t.estado === "Solicitado" && ( // Solicitado
-                        <button
-                          style={{ ...btnStyle, backgroundColor: "#28a745" }}
-                          onClick={() => handleConfirmar(t)}
-                        >
-                          Confirmar
-                        </button>
-                      )}
-                      {" "}
-                      {t.estado === "Confirmado" && ( // Confirmado
-                        <button
-                          style={{ ...btnStyle, backgroundColor: "#17a2b8" }}
-                          onClick={() => handleCompletar(t)}
-                        >
-                          Completar
-                        </button>
-                      )}
-                      {" "}
-                    </>
-                  )}
-                  {/* Botón Cancelar para todos */}
-                  {t.estado !== "Cancelado" && t.estado !== "Completado" && ( // No cancelado ni completado
-                    <button
-                      style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-                      onClick={() => handleCancelar(idTurno)}
-                    >
-                      Cancelar
-                    </button>
-                  )}
+              return (
+                <tr
+                  key={idTurno}
+                  style={{
+                    textAlign: "center",
+                    borderBottom: "1px solid #ccc",
+                  }}
+                >
+                  <td>
+                    {t.pacienteNombre}
+                  </td>
+                  <td>
+                    {t.profesionalNombre}
+                  </td>
+                  <td>{t.sede}</td>
+                  <td>{t.especialidad}</td>
+                  <td>{t.fecha}</td>
+                  <td>{t.horaInicio}</td>
+                  <td>{t.horaFin}</td>
+                  <td>{getEstadoTexto(t.estado)}</td>
+                  <td>
+                    {/* Botones para Asistente y Admin */}
+                    {(usuario?.rol === "asistente" || usuario?.rol === "admin") && (
+                      <>
+                        {t.estado !== "Cancelado" && t.estado !== "Completado" && (
+                          <button style={btnStyle} onClick={() => handleEditar(t)}>
+                            Editar
+                          </button>
+                        )}
+                        {" "}
+                        {t.estado === "Solicitado" && ( // Solicitado
+                          <button
+                            style={{ ...btnStyle, backgroundColor: "#28a745" }}
+                            onClick={() => handleConfirmar(t)}
+                          >
+                            Confirmar
+                          </button>
+                        )}
+                        {" "}
+                        {t.estado === "Confirmado" && ( // Confirmado
+                          <button
+                            style={{ ...btnStyle, backgroundColor: "#17a2b8" }}
+                            onClick={() => handleCompletar(t)}
+                          >
+                            Completar
+                          </button>
+                        )}
+                        {" "}
+                      </>
+                    )}
+                    {/* Botón Cancelar para todos */}
+                    {t.estado !== "Cancelado" && t.estado !== "Completado" && ( // No cancelado ni completado
+                      <button
+                        style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+                        onClick={() => handleCancelar(idTurno)}
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+
+            {turnosFiltrados.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center", padding: "10px" }}>
+                  No hay turnos para mostrar.
                 </td>
               </tr>
-            );
-          })}
-
-          {turnosFiltrados.length === 0 && (
-            <tr>
-              <td colSpan={6} style={{ textAlign: "center", padding: "10px" }}>
-                No hay turnos para mostrar.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
 const thStyle = { padding: "10px" };
 const inputStyle = {
-  margin: "5px",
   padding: "5px",
   borderRadius: "5px",
-  border: "1px solid " + "#ccc",
+  border: "1px solid #ccc",
 };
 const btnStyle = {
   padding: "5px 10px",

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace Biblioteca;
 
@@ -16,4 +16,7 @@ public class Paciente
     public string? Email { get; set; }
     public List<Turno> Turnos {get;set;}
     public List<Orden> Ordenes {get;set;}
+    [JsonIgnore]
+    public Usuario Usuario {get;set;}
+    public int IdUsuario {get; set;}
 }

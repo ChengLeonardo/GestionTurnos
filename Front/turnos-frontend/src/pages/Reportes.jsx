@@ -37,10 +37,10 @@ export default function Reportes() {
       case "fecha":
       default:
         {
-          const fechas = [...new Set(turnos.map(t => t.fechaHoraInicio ? t.fechaHoraInicio.split("T")[0] : ""))];
+          const fechas = [...new Set(turnos.map(t => t.fecha ? t.fecha.split("T")[0] : ""))];
           return fechas.filter(f => f).map(f => ({
             name: f,
-            cantidad: turnos.filter(t => t.fechaHoraInicio && t.fechaHoraInicio.startsWith(f)).length
+            cantidad: turnos.filter(t => t.fecha && t.fecha.startsWith(f)).length
           }));
         }
     }

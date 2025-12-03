@@ -17,3 +17,12 @@ public class TurnoDto
     public TimeSpan HoraInicio { get; set; }
     public TimeSpan HoraFin { get; set; }
 }
+
+public class PacienteAltaDto
+{
+    public string Nombre { get; set; }
+    public string Dni { get; set; }
+    public string Email { get; set; }
+    public string Telefono { get; set; }
+    public string Contrasena { get; set; }
+}

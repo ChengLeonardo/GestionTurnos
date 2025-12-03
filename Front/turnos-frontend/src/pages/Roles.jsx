@@ -78,68 +78,71 @@ export default function Roles() {
 
             {/* Formulario */}
             <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-                <input
-                    type="text"
-                    name="nombre"
-                    placeholder="Nombre del Rol"
-                    value={form.nombre}
-                    onChange={handleChange}
-                    required
-                    style={inputStyle}
-                />
-                <button type="submit" style={btnStyle}>
-                    {editingId ? "Actualizar" : "Crear"}
-                </button>
-                {editingId && (
-                    <button
-                        type="button"
-                        style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-                        onClick={() => {
-                            setEditingId(null);
-                            setForm({ nombre: "" });
-                        }}
-                    >
-                        Cancelar
+                <div className="row row-cols-1 row-cols-sm-3 row-cols-md-5">
+                    <input
+                        type="text"
+                        name="nombre"
+                        placeholder="Nombre del Rol"
+                        value={form.nombre}
+                        onChange={handleChange}
+                        required
+                        style={inputStyle}
+                    />
+                    <button type="submit" style={btnStyle}>
+                        {editingId ? "Actualizar" : "Crear"}
                     </button>
-                )}
+                    {editingId && (
+                        <button
+                            type="button"
+                            style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+                            onClick={() => {
+                                setEditingId(null);
+                                setForm({ nombre: "" });
+                            }}
+                        >
+                            Cancelar
+                        </button>
+                    )}
+                </div>
             </form>
 
             {/* Tabla */}
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                    <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
-                        <th style={thStyle}>ID</th>
-                        <th style={thStyle}>Nombre</th>
-                        <th style={thStyle}>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {roles.map(r => (
-                        <tr key={r.idRol} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
-                            <td>{r.idRol}</td>
-                            <td>{r.nombre}</td>
-                            <td>
-                                <button style={btnStyle} onClick={() => handleEditar(r)}>
-                                    Editar
-                                </button>{" "}
-                                <button
-                                    style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
-                                    onClick={() => handleEliminar(r.idRol)}
-                                >
-                                    Eliminar
-                                </button>
-                            </td>
+            <div className="table-responsive text-center">
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                        <tr style={{ backgroundColor: "#1E90FF", color: "white" }}>
+                            <th style={thStyle}>ID</th>
+                            <th style={thStyle}>Nombre</th>
+                            <th style={thStyle}>Acciones</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {roles.map(r => (
+                            <tr key={r.idRol} style={{ textAlign: "center", borderBottom: "1px solid #ccc" }}>
+                                <td>{r.idRol}</td>
+                                <td>{r.nombre}</td>
+                                <td>
+                                    <button style={btnStyle} onClick={() => handleEditar(r)}>
+                                        Editar
+                                    </button>{" "}
+                                    <button
+                                        style={{ ...btnStyle, backgroundColor: "#FF4C4C" }}
+                                        onClick={() => handleEliminar(r.idRol)}
+                                    >
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
 
 const thStyle = { padding: "10px" };
 const inputStyle = {
-    margin: "5px",
     padding: "5px",
     borderRadius: "5px",
     border: "1px solid #ccc",
